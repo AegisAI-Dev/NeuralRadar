@@ -18,6 +18,10 @@ def main():
     config = load_config()
     logger.info("Configuration loaded.")
     
+    # Initialize Database
+    from app.core.database import init_db
+    init_db()
+    
     # Initialize PySide6 App
     app = QApplication(sys.argv)
     

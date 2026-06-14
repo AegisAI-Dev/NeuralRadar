@@ -4,6 +4,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, Slot
 from app.modules.iphawk.scanner import ScannerThread
+from app.modules.devicevault.service import DeviceVaultService
+from app.core.database import SessionLocal
 from app.core.logger import logger
 import ipaddress
 
@@ -92,6 +94,27 @@ class IPHawkPage(QWidget):
         self.btn_stop.clicked.connect(self.stop_scan)
         self.btn_stop.setEnabled(False)
         controls_layout.addWidget(self.btn_stop)
+        
+        self.btn_save_vault = QPushButton("Save to DeviceVault")
+        self.btn_save_vault.setStyleSheet("""
+            QPushButton {
+                background-color: #a6e3a1;
+                color: #11111b;
+                font-weight: bold;
+                padding: 10px 20px;
+                border-radius: 4px;
+            }
+            QPushButton:hover {
+                background-color: #94e2d5;
+            }
+            QPushButton:disabled {
+                background-color: #313244;
+                color: #6c7086;
+            }
+        """)
+        self.btn_save_vault.clicked.connect(self.save_to_devicevault)
+        self.btn_save_vault.setEnabled(False)
+        controls_layout.addWidget(self.btn_save_vault)
         
         main_layout.addLayout(controls_layout)
         
@@ -378,6 +401,24 @@ class IPHawkPage(QWidget):
             self.status_label.setText(msg)
 
     @Slot()
+    def save_to_devicevault(self):
+        if not self.host_data_map:
+            QMessageBox.information(self, "No Data", "There are no scan results to save.")
+            return
+            
+        db = SessionLocal()
+        try:
+            results = list(self.host_data_map.values())
+            success, saved, updated = DeviceVaultService.save_scan_results(db, results)
+            
+            if success:
+                QMessageBox.information(self, "DeviceVault Sync", f"Successfully synced to DeviceVault.\n\nAdded: {saved}\nUpdated: {updated}")
+            else:
+                QMessageBox.warning(self, "Error", "Failed to sync with DeviceVault. Check logs.")
+        finally:
+            db.close()
+
+    @Slot()
     def on_scan_finished(self):
         logger.info("IPHawk scan finished.")
         if getattr(self, 'is_cancelled', False):
@@ -387,3 +428,5 @@ class IPHawkPage(QWidget):
         self.btn_start.setEnabled(True)
         self.subnet_input.setEnabled(True)
         self.btn_stop.setEnabled(False)
+        if self.host_data_map:
+            self.btn_save_vault.setEnabled(True)

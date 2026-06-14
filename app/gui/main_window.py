@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt
 from app.gui.sidebar import Sidebar
 from app.gui.dashboard import Dashboard
 from app.gui.iphawk_page import IPHawkPage
+from app.gui.devicevault_page import DeviceVaultPage
 from app.core.logger import logger
 
 class PlaceholderPage(QWidget):
@@ -47,7 +48,7 @@ class MainWindow(QMainWindow):
         self.portscope_page = PlaceholderPage("PortScope")
         self.content_area.addWidget(self.portscope_page)
         
-        self.devicevault_page = PlaceholderPage("DeviceVault")
+        self.devicevault_page = DeviceVaultPage()
         self.content_area.addWidget(self.devicevault_page)
         
         self.netmap_page = PlaceholderPage("NetMap")
