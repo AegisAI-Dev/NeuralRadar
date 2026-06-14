@@ -4,6 +4,7 @@ from app.gui.sidebar import Sidebar
 from app.gui.dashboard import Dashboard
 from app.gui.iphawk_page import IPHawkPage
 from app.gui.devicevault_page import DeviceVaultPage
+from app.gui.portscope_page import PortScopePage
 from app.core.logger import logger
 
 class PlaceholderPage(QWidget):
@@ -45,7 +46,7 @@ class MainWindow(QMainWindow):
         self.iphawk_page = IPHawkPage()
         self.content_area.addWidget(self.iphawk_page)
         
-        self.portscope_page = PlaceholderPage("PortScope")
+        self.portscope_page = PortScopePage()
         self.content_area.addWidget(self.portscope_page)
         
         self.devicevault_page = DeviceVaultPage()
