@@ -4,19 +4,19 @@ import os
 # Add the parent directory to sys.path so 'app' is recognized as a package
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.core.database import init_db, SessionLocal
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.core.database import Base
 from app.modules.devicevault.service import DeviceVaultService
 from app.modules.devicevault.models import Device
 
 def run_tests():
-    init_db()
-    db = SessionLocal()
+    engine = create_engine("sqlite:///:memory:", echo=False)
+    Base.metadata.create_all(bind=engine)
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    db = TestingSessionLocal()
     
-    # Clear DB for test
-    db.query(Device).delete()
-    db.commit()
-
-    print("DB initialized and cleared.")
+    print("In-memory test DB initialized.")
 
     # 1. Test Sync: New Device
     host1 = {

@@ -69,6 +69,17 @@ class DeviceVaultPage(QWidget):
         splitter.setHandleWidth(10)
         splitter.setStyleSheet("QSplitter::handle { background-color: transparent; }")
         
+        # Table Container
+        self.table_container = QWidget()
+        self.table_layout = QVBoxLayout(self.table_container)
+        self.table_layout.setContentsMargins(0, 0, 0, 0)
+        
+        self.lbl_empty_state = QLabel("No devices saved yet. Run an IPHawk scan and save results to DeviceVault.")
+        self.lbl_empty_state.setAlignment(Qt.AlignCenter)
+        self.lbl_empty_state.setStyleSheet("color: #a6adc8; font-size: 16px; font-style: italic; background-color: #1e1e2e; border: 1px solid #313244; border-radius: 4px;")
+        self.lbl_empty_state.hide()
+        self.table_layout.addWidget(self.lbl_empty_state)
+        
         # Table
         self.table = QTableWidget(0, 8)
         self.table.setHorizontalHeaderLabels([
@@ -98,7 +109,8 @@ class DeviceVaultPage(QWidget):
         self.table.setSelectionMode(QTableWidget.SingleSelection)
         self.table.itemSelectionChanged.connect(self.on_selection_changed)
         
-        splitter.addWidget(self.table)
+        self.table_layout.addWidget(self.table)
+        splitter.addWidget(self.table_container)
         
         # Details Panel
         self.details_panel = QFrame()
@@ -171,6 +183,33 @@ class DeviceVaultPage(QWidget):
         self.btn_save_changes.setEnabled(False)
         self.details_layout.addWidget(self.btn_save_changes)
         
+        self.details_layout.addSpacing(15)
+        
+        # Open Services Section
+        services_title = QLabel("Open Services")
+        services_title.setStyleSheet("color: #cdd6f4; font-size: 14px; font-weight: bold; border: none; padding-bottom: 5px;")
+        self.details_layout.addWidget(services_title)
+        
+        self.lbl_no_services = QLabel("No services saved yet.")
+        self.lbl_no_services.setStyleSheet("color: #6c7086; font-style: italic; border: none;")
+        self.details_layout.addWidget(self.lbl_no_services)
+        
+        self.services_table = QTableWidget(0, 5)
+        self.services_table.setHorizontalHeaderLabels(["Port", "Protocol", "Service", "State", "Last Seen"])
+        self.services_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.services_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
+        self.services_table.setStyleSheet("""
+            QTableWidget { background-color: #181825; color: #cdd6f4; border: 1px solid #313244; border-radius: 4px; gridline-color: #313244; outline: none; }
+            QHeaderView::section { background-color: #313244; color: #cdd6f4; padding: 4px; border: none; font-weight: bold; font-size: 11px; }
+            QTableWidget::item { padding: 4px; font-size: 11px; outline: none; }
+        """)
+        self.services_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.services_table.setSelectionMode(QTableWidget.NoSelection)
+        self.services_table.verticalHeader().setVisible(False)
+        self.services_table.setMaximumHeight(150)
+        self.services_table.hide()
+        self.details_layout.addWidget(self.services_table)
+        
         splitter.addWidget(self.details_panel)
         splitter.setStretchFactor(0, 7)
         splitter.setStretchFactor(1, 3)
@@ -193,6 +232,16 @@ class DeviceVaultPage(QWidget):
                 devices = DeviceVaultService.get_all_devices(db)
                 
             self.table.setRowCount(0)
+            
+            if not devices and not query:
+                self.table.hide()
+                self.lbl_empty_state.show()
+                self.details_panel.hide()
+            else:
+                self.table.show()
+                self.lbl_empty_state.hide()
+                self.details_panel.show()
+                
             for d in devices:
                 row = self.table.rowCount()
                 self.table.insertRow(row)
@@ -261,6 +310,30 @@ class DeviceVaultPage(QWidget):
         self.edit_notes.setPlainText(extra_data['notes'])
         
         self.btn_save_changes.setEnabled(True)
+        
+        # Load services
+        db = SessionLocal()
+        try:
+            services = DeviceVaultService.get_device_services(db, self.current_device_id)
+            if services:
+                self.lbl_no_services.hide()
+                self.services_table.show()
+                self.services_table.setRowCount(0)
+                for srv in services:
+                    r = self.services_table.rowCount()
+                    self.services_table.insertRow(r)
+                    self.services_table.setItem(r, 0, QTableWidgetItem(str(srv.port)))
+                    self.services_table.setItem(r, 1, QTableWidgetItem(srv.protocol))
+                    self.services_table.setItem(r, 2, QTableWidgetItem(srv.service_guess))
+                    state_item = QTableWidgetItem(srv.state)
+                    state_item.setForeground(Qt.green)
+                    self.services_table.setItem(r, 3, state_item)
+                    self.services_table.setItem(r, 4, QTableWidgetItem(srv.last_seen))
+            else:
+                self.services_table.hide()
+                self.lbl_no_services.show()
+        finally:
+            db.close()
 
     @Slot()
     def save_manual_edits(self):

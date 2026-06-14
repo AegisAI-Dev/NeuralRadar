@@ -4,10 +4,12 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, Slot
 from app.modules.portscope.scanner import PortScannerThread
+from app.modules.devicevault.service import DeviceVaultService
 from app.core.logger import logger
 from app.core.database import SessionLocal
 from app.modules.devicevault.models import Device
 import ipaddress
+import re
 
 PRESETS = {
     "Common Ports": "21,22,23,25,53,80,110,139,143,443,445,587,993,995,3306,3389,5432,5900,8000,8080,8443",
@@ -110,6 +112,16 @@ class PortScopePage(QWidget):
         self.btn_stop.clicked.connect(self.stop_scan)
         self.btn_stop.setEnabled(False)
         action_layout.addWidget(self.btn_stop)
+        
+        self.btn_save_vault = QPushButton("Save to DeviceVault")
+        self.btn_save_vault.setStyleSheet("""
+            QPushButton { background-color: #a6e3a1; color: #11111b; font-weight: bold; padding: 8px 20px; border-radius: 4px; }
+            QPushButton:hover { background-color: #94e2d5; }
+            QPushButton:disabled { background-color: #313244; color: #6c7086; }
+        """)
+        self.btn_save_vault.clicked.connect(self.save_to_devicevault)
+        self.btn_save_vault.setEnabled(False)
+        action_layout.addWidget(self.btn_save_vault)
         
         btn_layout.addLayout(action_layout)
         controls_layout.addLayout(btn_layout)
@@ -292,6 +304,34 @@ class PortScopePage(QWidget):
             self.status_label.setText(msg)
 
     @Slot()
+    def save_to_devicevault(self):
+        if self.table.rowCount() == 0:
+            QMessageBox.information(self, "No Data", "There are no open ports to save.")
+            return
+            
+        results = []
+        for row in range(self.table.rowCount()):
+            results.append({
+                'ip': self.table.item(row, 1).text(),
+                'port': int(self.table.item(row, 2).text()),
+                'protocol': self.table.item(row, 3).text(),
+                'service': self.table.item(row, 4).text(),
+                'state': self.table.item(row, 5).text(),
+                'response_time': self.table.item(row, 6).text().replace(" ms", ""),
+            })
+            
+        db = SessionLocal()
+        try:
+            success, saved, updated = DeviceVaultService.save_port_scan_results(db, results)
+            
+            if success:
+                QMessageBox.information(self, "DeviceVault Sync", f"Successfully synced to DeviceVault.\n\nAdded: {saved} ports\nUpdated: {updated} ports")
+            else:
+                QMessageBox.warning(self, "Error", "Failed to sync with DeviceVault. Check logs.")
+        finally:
+            db.close()
+
+    @Slot()
     def on_scan_finished(self):
         logger.info("PortScope scan finished.")
         if getattr(self, 'is_cancelled', False):
@@ -304,3 +344,5 @@ class PortScopePage(QWidget):
         self.preset_combo.setEnabled(True)
         self.ports_input.setEnabled(True)
         self.btn_stop.setEnabled(False)
+        if self.table.rowCount() > 0:
+            self.btn_save_vault.setEnabled(True)
