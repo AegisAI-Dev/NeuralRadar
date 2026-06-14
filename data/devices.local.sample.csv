@@ -1,0 +1,4 @@
+IP,DisplayName,DeviceType,VendorOverride,Notes
+192.168.50.140,0xRootNull,Windows PC,,Main workstation / gaming PC
+192.168.50.170,TrueNAS,Storage Server,,TrueNAS server
+192.168.50.225,root,Proxmox Node,,MSI Leopard Proxmox host

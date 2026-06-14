@@ -72,6 +72,11 @@ NeuralRadar is built with a modular architecture to support future expansions:
 
 **Important:** NeuralRadar is a powerful network discovery and scanning tool. It is intended strictly for use on networks, systems, and devices that you own or have explicit, documented permission to test and monitor. Unauthorized scanning of third-party networks or infrastructure is strictly prohibited and may violate local or international laws. Always ensure you have the necessary authorization before running network scans.
 
+### 🔍 Vendor Detection Note
+*   Vendor detection is based on MAC OUI prefixes.
+*   Some vendors may still show "Unknown" if the OUI is missing from the local database.
+*   Users can add custom mappings in `data/oui.csv`.
+
 ## Contributing
 
 We welcome contributions to NeuralRadar!
