@@ -45,6 +45,7 @@ class Sidebar(QWidget):
         self.btn_iphawk = self.create_nav_button("IPHawk")
         self.btn_portscope = self.create_nav_button("PortScope")
         self.btn_devicevault = self.create_nav_button("DeviceVault")
+        self.btn_webpulse = self.create_nav_button("WebPulse")
         self.btn_netmap = self.create_nav_button("NetMap")
         self.btn_settings = self.create_nav_button("Settings")
         
@@ -52,6 +53,7 @@ class Sidebar(QWidget):
         layout.addWidget(self.btn_iphawk)
         layout.addWidget(self.btn_portscope)
         layout.addWidget(self.btn_devicevault)
+        layout.addWidget(self.btn_webpulse)
         layout.addWidget(self.btn_netmap)
         
         layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))

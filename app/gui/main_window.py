@@ -5,6 +5,7 @@ from app.gui.dashboard import Dashboard
 from app.gui.iphawk_page import IPHawkPage
 from app.gui.devicevault_page import DeviceVaultPage
 from app.gui.portscope_page import PortScopePage
+from app.gui.webpulse_page import WebPulsePage
 from app.core.logger import logger
 
 class PlaceholderPage(QWidget):
@@ -52,6 +53,9 @@ class MainWindow(QMainWindow):
         self.devicevault_page = DeviceVaultPage()
         self.content_area.addWidget(self.devicevault_page)
         
+        self.webpulse_page = WebPulsePage()
+        self.content_area.addWidget(self.webpulse_page)
+        
         self.netmap_page = PlaceholderPage("NetMap")
         self.content_area.addWidget(self.netmap_page)
         
@@ -63,8 +67,9 @@ class MainWindow(QMainWindow):
         self.sidebar.btn_iphawk.clicked.connect(lambda: self.switch_page(1, self.sidebar.btn_iphawk))
         self.sidebar.btn_portscope.clicked.connect(lambda: self.switch_page(2, self.sidebar.btn_portscope))
         self.sidebar.btn_devicevault.clicked.connect(lambda: self.switch_page(3, self.sidebar.btn_devicevault))
-        self.sidebar.btn_netmap.clicked.connect(lambda: self.switch_page(4, self.sidebar.btn_netmap))
-        self.sidebar.btn_settings.clicked.connect(lambda: self.switch_page(5, self.sidebar.btn_settings))
+        self.sidebar.btn_webpulse.clicked.connect(lambda: self.switch_page(4, self.sidebar.btn_webpulse))
+        self.sidebar.btn_netmap.clicked.connect(lambda: self.switch_page(5, self.sidebar.btn_netmap))
+        self.sidebar.btn_settings.clicked.connect(lambda: self.switch_page(6, self.sidebar.btn_settings))
         
         # Keep track of buttons for easy unchecking
         self.nav_buttons = [
@@ -72,6 +77,7 @@ class MainWindow(QMainWindow):
             self.sidebar.btn_iphawk,
             self.sidebar.btn_portscope,
             self.sidebar.btn_devicevault,
+            self.sidebar.btn_webpulse,
             self.sidebar.btn_netmap,
             self.sidebar.btn_settings
         ]
