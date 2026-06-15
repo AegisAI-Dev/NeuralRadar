@@ -25,6 +25,7 @@ class Device(Base):
     
     # Relationships
     services = relationship("OpenPort", back_populates="device", cascade="all, delete-orphan")
+    web_services = relationship("WebService", back_populates="device", cascade="all, delete-orphan")
 
 class OpenPort(Base):
     __tablename__ = "open_ports"
@@ -42,3 +43,33 @@ class OpenPort(Base):
     source_module = Column(String, default="PortScope")
 
     device = relationship("Device", back_populates="services")
+
+class WebService(Base):
+    __tablename__ = "web_services"
+
+    id = Column(Integer, primary_key=True, index=True)
+    device_id = Column(Integer, ForeignKey("devices.id"))
+    service_id = Column(Integer, nullable=True) # Optional link to specific open_port
+    ip_address = Column(String, index=True)
+    url = Column(String, index=True)
+    scheme = Column(String, default="—")
+    host = Column(String, default="—")
+    port = Column(Integer, default=80)
+    status = Column(String, default="Offline")
+    http_code = Column(String, default="—")
+    reason = Column(String, default="—")
+    final_url = Column(String, default="—")
+    redirect_count = Column(String, default="0")
+    page_title = Column(String, default="—")
+    server_header = Column(String, default="—")
+    content_type = Column(String, default="—")
+    ssl_enabled = Column(String, default="—")
+    ssl_expiry = Column(String, default="—")
+    ssl_issuer = Column(String, default="—")
+    error_message = Column(String, default="—")
+    response_time = Column(String, default="timeout")
+    first_seen = Column(String, default=lambda: datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    last_checked = Column(String, default=lambda: datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    source_module = Column(String, default="WebPulse")
+
+    device = relationship("Device", back_populates="web_services")

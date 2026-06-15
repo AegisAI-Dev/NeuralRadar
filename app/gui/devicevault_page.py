@@ -210,6 +210,32 @@ class DeviceVaultPage(QWidget):
         self.services_table.hide()
         self.details_layout.addWidget(self.services_table)
         
+        # Web Metadata Section
+        web_title = QLabel("Web Metadata")
+        web_title.setStyleSheet("color: #cdd6f4; font-size: 14px; font-weight: bold; border: none; padding-top: 10px; padding-bottom: 5px;")
+        self.details_layout.addWidget(web_title)
+        
+        self.lbl_no_web = QLabel("No web metadata saved yet. Run WebPulse and save results.")
+        self.lbl_no_web.setStyleSheet("color: #6c7086; font-style: italic; border: none;")
+        self.details_layout.addWidget(self.lbl_no_web)
+        
+        self.web_table = QTableWidget(0, 7)
+        self.web_table.setHorizontalHeaderLabels(["URL", "Status", "HTTP Code", "Title", "Server", "SSL Expiry", "Last Checked"])
+        self.web_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.web_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.web_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.Stretch)
+        self.web_table.setStyleSheet("""
+            QTableWidget { background-color: #181825; color: #cdd6f4; border: 1px solid #313244; border-radius: 4px; gridline-color: #313244; outline: none; }
+            QHeaderView::section { background-color: #313244; color: #cdd6f4; padding: 4px; border: none; font-weight: bold; font-size: 11px; }
+            QTableWidget::item { padding: 4px; font-size: 11px; outline: none; }
+        """)
+        self.web_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.web_table.setSelectionMode(QTableWidget.NoSelection)
+        self.web_table.verticalHeader().setVisible(False)
+        self.web_table.setMaximumHeight(150)
+        self.web_table.hide()
+        self.details_layout.addWidget(self.web_table)
+        
         splitter.addWidget(self.details_panel)
         splitter.setStretchFactor(0, 7)
         splitter.setStretchFactor(1, 3)
@@ -332,6 +358,49 @@ class DeviceVaultPage(QWidget):
             else:
                 self.services_table.hide()
                 self.lbl_no_services.show()
+                
+            # Load web services
+            try:
+                web_services = DeviceVaultService.get_device_web_services(db, self.current_device_id)
+                if web_services:
+                    self.lbl_no_web.hide()
+                    self.web_table.show()
+                    self.web_table.setRowCount(0)
+                    for ws in web_services:
+                        r = self.web_table.rowCount()
+                        self.web_table.insertRow(r)
+                        self.web_table.setItem(r, 0, QTableWidgetItem(ws.url))
+                        
+                        status_item = QTableWidgetItem(ws.status)
+                        if ws.status == "Online": status_item.setForeground(Qt.green)
+                        elif ws.status == "Redirect Warning": status_item.setForeground(Qt.yellow)
+                        elif ws.status == "TLS Warning": status_item.setForeground(Qt.darkYellow)
+                        elif ws.status == "Protocol Mismatch": status_item.setForeground(Qt.cyan)
+                        elif ws.status == "TLS/SNI Error": status_item.setForeground(Qt.magenta)
+                        else: status_item.setForeground(Qt.red)
+                        self.web_table.setItem(r, 1, status_item)
+                        
+                        self.web_table.setItem(r, 2, QTableWidgetItem(ws.http_code))
+                        
+                        title_item = QTableWidgetItem(ws.page_title)
+                        if ws.page_title == "—": title_item.setForeground(Qt.gray)
+                        self.web_table.setItem(r, 3, title_item)
+                        
+                        server_item = QTableWidgetItem(ws.server_header)
+                        if ws.server_header == "—": server_item.setForeground(Qt.gray)
+                        self.web_table.setItem(r, 4, server_item)
+                        
+                        expiry_item = QTableWidgetItem(ws.ssl_expiry)
+                        if ws.ssl_expiry == "—": expiry_item.setForeground(Qt.gray)
+                        self.web_table.setItem(r, 5, expiry_item)
+                        
+                        self.web_table.setItem(r, 6, QTableWidgetItem(ws.last_checked))
+                else:
+                    self.web_table.hide()
+                    self.lbl_no_web.show()
+            except Exception as e:
+                logger.error(f"Error loading web services: {e}")
+                
         finally:
             db.close()
 

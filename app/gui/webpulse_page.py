@@ -101,6 +101,14 @@ class WebPulsePage(QWidget):
         self.btn_stop.setEnabled(False)
         action_layout.addWidget(self.btn_stop)
         
+        self.btn_save_vault = QPushButton("Save Results to DeviceVault")
+        self.btn_save_vault.setStyleSheet("""
+            QPushButton { background-color: #a6e3a1; color: #11111b; font-weight: bold; padding: 8px 20px; border-radius: 4px; font-size: 14px;}
+            QPushButton:hover { background-color: #94e2d5; }
+        """)
+        self.btn_save_vault.clicked.connect(self.save_to_vault)
+        action_layout.addWidget(self.btn_save_vault)
+        
         action_layout.addStretch()
         left_layout.addLayout(action_layout)
         
@@ -448,5 +456,34 @@ class WebPulsePage(QWidget):
                 self.detail_labels["Error"].setStyleSheet("border: none; color: #cdd6f4;")
 
             # Placeholders for Phase 5C
-            # TODO: Add saving WebPulse results to DeviceVault
             # TODO: Display web metadata under DeviceVault services
+
+    @Slot()
+    def save_to_vault(self):
+        if not self.results_data:
+            QMessageBox.information(self, "No Results", "There are no results to save.")
+            return
+
+        show_failed = self.show_failed_cb.isChecked()
+        valid_results = []
+        for res in self.results_data:
+            status = res.get("status", "")
+            if status in ["Online", "Redirect Warning", "TLS Warning"]:
+                valid_results.append(res)
+            elif show_failed:
+                valid_results.append(res)
+                
+        if not valid_results:
+            QMessageBox.information(self, "No Results", "No eligible results to save based on current filters.")
+            return
+            
+        db = SessionLocal()
+        try:
+            from app.modules.devicevault.service import DeviceVaultService
+            success, saved, updated = DeviceVaultService.save_webpulse_results(db, valid_results)
+            if success:
+                QMessageBox.information(self, "Success", f"Saved {saved} new web services and updated {updated} existing records.")
+            else:
+                QMessageBox.warning(self, "Error", "Failed to save results to DeviceVault.")
+        finally:
+            db.close()

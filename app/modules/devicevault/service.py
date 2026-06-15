@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.modules.devicevault.models import Device, OpenPort
+from app.modules.devicevault.models import Device, OpenPort, WebService
 from app.core.logger import logger
 import datetime
 
@@ -199,4 +199,128 @@ class DeviceVaultService:
         except Exception as e:
             db.rollback()
             logger.error(f"Error saving PortScope results: {e}")
+            return False, 0, 0
+
+    @staticmethod
+    def get_device_web_services(db: Session, device_id: int):
+        return db.query(WebService).filter(WebService.device_id == device_id).all()
+
+    @staticmethod
+    def save_webpulse_results(db: Session, results: list):
+        """
+        results: List of dictionaries matching the WebPulse result format.
+        """
+        saved_count = 0
+        updated_count = 0
+        
+        for res in results:
+            url = res.get("url")
+            host = res.get("host")
+            if not url or not host:
+                continue
+
+            # Try to match device by IP or hostname
+            device = db.query(Device).filter(Device.ip_address == host).first()
+            if not device:
+                device = db.query(Device).filter(Device.detected_hostname == host).first()
+                
+            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            # Create stub device if it doesn't exist
+            if not device:
+                # Is it an IP address? We'll assume yes if it looks like one, else it's a hostname
+                is_ip = host.replace(".", "").isdigit()
+                ip_addr = host if is_ip else "—"
+                hostname = host if not is_ip else "—"
+                
+                device = Device(
+                    ip_address=ip_addr,
+                    name="—",
+                    detected_hostname=hostname,
+                    mac_address="—",
+                    vendor="—",
+                    device_type="Unclassified",
+                    status="Online",
+                    tags="",
+                    notes="",
+                    discovery_source="—",
+                    confidence="—",
+                    first_seen=now,
+                    last_seen=now,
+                    response_time="0",
+                    source_module="WebPulse"
+                )
+                db.add(device)
+                db.flush()
+
+            # Attempt to find the matching service_id
+            port_num = int(res.get("port", 80))
+            open_port = db.query(OpenPort).filter(
+                OpenPort.device_id == device.id,
+                OpenPort.port == port_num
+            ).first()
+            
+            service_id = open_port.id if open_port else None
+            
+            # Check if web service already exists
+            web_service = db.query(WebService).filter(
+                WebService.device_id == device.id,
+                WebService.url == url
+            ).first()
+
+            if web_service:
+                web_service.status = res.get("status", "Offline")
+                web_service.http_code = res.get("http_code", "—")
+                web_service.reason = res.get("reason", "—")
+                web_service.final_url = res.get("final_url", "—")
+                web_service.redirect_count = res.get("redirect_count", "0")
+                web_service.page_title = res.get("title", "—")
+                web_service.server_header = res.get("server", "—")
+                web_service.content_type = res.get("content_type", "—")
+                web_service.ssl_enabled = res.get("ssl_enabled", "—")
+                web_service.ssl_expiry = res.get("ssl_expiry", "—")
+                web_service.ssl_issuer = res.get("ssl_issuer", "—")
+                web_service.error_message = res.get("error", "—")
+                web_service.response_time = res.get("response_time", "timeout")
+                web_service.last_checked = now
+                if service_id:
+                    web_service.service_id = service_id
+                updated_count += 1
+            else:
+                new_ws = WebService(
+                    device_id=device.id,
+                    service_id=service_id,
+                    ip_address=device.ip_address,
+                    url=url,
+                    scheme=res.get("scheme", "—"),
+                    host=host,
+                    port=port_num,
+                    status=res.get("status", "Offline"),
+                    http_code=res.get("http_code", "—"),
+                    reason=res.get("reason", "—"),
+                    final_url=res.get("final_url", "—"),
+                    redirect_count=res.get("redirect_count", "0"),
+                    page_title=res.get("title", "—"),
+                    server_header=res.get("server", "—"),
+                    content_type=res.get("content_type", "—"),
+                    ssl_enabled=res.get("ssl_enabled", "—"),
+                    ssl_expiry=res.get("ssl_expiry", "—"),
+                    ssl_issuer=res.get("ssl_issuer", "—"),
+                    error_message=res.get("error", "—"),
+                    response_time=res.get("response_time", "timeout"),
+                    first_seen=now,
+                    last_checked=now,
+                    source_module="WebPulse"
+                )
+                db.add(new_ws)
+                saved_count += 1
+
+        try:
+            db.commit()
+            if saved_count > 0 or updated_count > 0:
+                logger.info(f"WebPulse sync: {saved_count} new web services, {updated_count} updated.")
+            return True, saved_count, updated_count
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error saving WebPulse results: {e}")
             return False, 0, 0
