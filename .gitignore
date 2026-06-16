@@ -21,10 +21,18 @@ var/
 *.egg
 venv/
 .venv/
+*.spec
 
-# SQLite
+# Caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# SQLite / Database
 *.sqlite3
 *.db
+data/neuralradar.db
+data/test_neuralradar.db
 
 # OS
 .DS_Store

@@ -113,7 +113,7 @@ class PortScopePage(QWidget):
         self.btn_stop.setEnabled(False)
         action_layout.addWidget(self.btn_stop)
         
-        self.btn_save_vault = QPushButton("Save to DeviceVault")
+        self.btn_save_vault = QPushButton("Save Results to DeviceVault")
         self.btn_save_vault.setStyleSheet("""
             QPushButton { background-color: #a6e3a1; color: #11111b; font-weight: bold; padding: 8px 20px; border-radius: 4px; }
             QPushButton:hover { background-color: #94e2d5; }

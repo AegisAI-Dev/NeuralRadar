@@ -7,6 +7,8 @@ from app.gui.devicevault_page import DeviceVaultPage
 from app.gui.portscope_page import PortScopePage
 from app.gui.webpulse_page import WebPulsePage
 from app.core.logger import logger
+from app.core.version import VERSION
+from app.gui.settings_page import SettingsPage
 
 class PlaceholderPage(QWidget):
     def __init__(self, title):
@@ -21,7 +23,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         
-        self.setWindowTitle("NeuralRadar - Network Visibility Platform")
+        self.setWindowTitle(f"NeuralRadar {VERSION} - Network Visibility Platform")
         self.setMinimumSize(1100, 750)
         self.setStyleSheet("background-color: #181825;")
         
@@ -59,7 +61,7 @@ class MainWindow(QMainWindow):
         self.netmap_page = PlaceholderPage("NetMap")
         self.content_area.addWidget(self.netmap_page)
         
-        self.settings_page = PlaceholderPage("Settings")
+        self.settings_page = SettingsPage()
         self.content_area.addWidget(self.settings_page)
         
         # Connect sidebar buttons

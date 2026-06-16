@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QSpacerItem, QSizePolicy
 from PySide6.QtCore import Qt
+from app.core.version import VERSION
 
 class Sidebar(QWidget):
     def __init__(self):
@@ -37,8 +38,12 @@ class Sidebar(QWidget):
         
         # Logo placeholder
         logo_label = QLabel("NeuralRadar")
-        logo_label.setStyleSheet("color: #89b4fa; font-size: 24px; font-weight: bold; padding-bottom: 20px; padding-left: 20px;")
+        logo_label.setStyleSheet("color: #89b4fa; font-size: 24px; font-weight: bold; padding-bottom: 0px; padding-left: 20px;")
         layout.addWidget(logo_label)
+        
+        version_label = QLabel(VERSION)
+        version_label.setStyleSheet("color: #a6adc8; font-size: 12px; padding-bottom: 20px; padding-left: 20px;")
+        layout.addWidget(version_label)
         
         # Navigation Buttons
         self.btn_dashboard = self.create_nav_button("Dashboard", checked=True)

@@ -95,7 +95,7 @@ class IPHawkPage(QWidget):
         self.btn_stop.setEnabled(False)
         controls_layout.addWidget(self.btn_stop)
         
-        self.btn_save_vault = QPushButton("Save to DeviceVault")
+        self.btn_save_vault = QPushButton("Save Results to DeviceVault")
         self.btn_save_vault.setStyleSheet("""
             QPushButton {
                 background-color: #a6e3a1;
