@@ -5,12 +5,9 @@ from app.core.logger import logger
 
 Base = declarative_base()
 
-# Ensure data directory exists
-DB_DIR = "data"
-if not os.path.exists(DB_DIR):
-    os.makedirs(DB_DIR)
+from app.core.paths import get_database_path
 
-DB_PATH = os.path.join(DB_DIR, "neuralradar.db")
+DB_PATH = get_database_path()
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 # Create engine
