@@ -324,3 +324,42 @@ class DeviceVaultService:
             db.rollback()
             logger.error(f"Error saving WebPulse results: {e}")
             return False, 0, 0
+
+    @staticmethod
+    def get_inventory_stats(db: Session):
+        """Lightweight stats for dashboard. Uses existing models only."""
+        stats = {
+            'total_devices': 0,
+            'online_devices': 0,
+            'open_services': 0,
+            'web_endpoints': 0,
+            'tls_warnings': 0,
+            'last_updated': '—'
+        }
+        
+        try:
+            # Total and Online Devices
+            stats['total_devices'] = db.query(Device).count()
+            stats['online_devices'] = db.query(Device).filter(Device.status == "Online").count()
+            
+            # Open Services
+            stats['open_services'] = db.query(OpenPort).count()
+            
+            # Web Endpoints
+            stats['web_endpoints'] = db.query(WebService).count()
+            
+            # TLS Warnings (matches existing status values)
+            tls_statuses = ["TLS Warning", "TLS/SNI Error", "Protocol Mismatch"]
+            stats['tls_warnings'] = db.query(WebService).filter(
+                WebService.status.in_(tls_statuses)
+            ).count()
+            
+            # Last Updated - simple max from devices (lightweight)
+            latest_device = db.query(Device).order_by(Device.last_seen.desc()).first()
+            if latest_device and latest_device.last_seen:
+                stats['last_updated'] = latest_device.last_seen
+            
+        except Exception as e:
+            logger.error(f"Stats calculation error: {e}")
+            
+        return stats
