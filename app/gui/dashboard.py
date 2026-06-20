@@ -1,107 +1,149 @@
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QGridLayout, QFrame, QScrollArea, QSizePolicy
+    QWidget, QVBoxLayout, QLabel, QGridLayout, QFrame, QScrollArea, 
+    QHBoxLayout, QSizePolicy, QSpacerItem
 )
 from PySide6.QtCore import Qt
+from app.gui.theme import Theme
+
 
 class ModuleCard(QFrame):
-    def __init__(self, title, description):
+    """Premium module card for the elite NeuralShield dashboard."""
+    def __init__(self, title: str, description: str, status: str = "Coming Soon", icon: str = ""):
         super().__init__()
-        self.setFrameShape(QFrame.StyledPanel)
-        self.setStyleSheet("""
-            ModuleCard {
-                background-color: #1e1e2e;
-                border: 1px solid #313244;
-                border-radius: 8px;
-            }
-            ModuleCard:hover {
-                border: 1px solid #89b4fa;
-            }
-        """)
-        self.setFixedSize(250, 150)
         
-        layout = QVBoxLayout()
+        is_active = status == "Active"
+        self.setStyleSheet(Theme.get_card_style(active=is_active))
+        self.setFixedSize(290, 170)
+        
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(14)
+        
+        # Header with clean icon (only for active cards) and title
+        header = QHBoxLayout()
+        if icon and is_active:
+            icon_label = QLabel(icon)
+            icon_label.setStyleSheet(f"font-size: 26px; color: {Theme.COLORS.PRIMARY};")
+            header.addWidget(icon_label)
         
         title_label = QLabel(title)
-        title_label.setStyleSheet("color: #cdd6f4; font-size: 16px; font-weight: bold; border: none; background: transparent;")
+        title_label.setStyleSheet("font-size: 18px; font-weight: 600; color: #E5E7EB;")
+        header.addWidget(title_label)
+        header.addStretch()
         
+        # Status badge
+        status_label = QLabel(status)
+        status_label.setProperty("status", "active" if is_active else "coming-soon")
+        status_label.setStyleSheet("")  # Uses global theme
+        header.addWidget(status_label)
+        
+        layout.addLayout(header)
+        
+        # Description
         desc_label = QLabel(description)
-        desc_label.setStyleSheet("color: #a6adc8; font-size: 12px; border: none; background: transparent;")
         desc_label.setWordWrap(True)
-        desc_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        
-        layout.addWidget(title_label)
+        desc_label.setStyleSheet("color: #94A3B8; font-size: 13px; line-height: 1.45;")
         layout.addWidget(desc_label)
-        layout.addStretch()
         
-        self.setLayout(layout)
+        layout.addStretch()
+
 
 class Dashboard(QWidget):
+    """Elite premium NeuralShield cyber-tech dashboard landing screen."""
     def __init__(self):
         super().__init__()
+        Theme.apply_theme(self)
         
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(30, 30, 30, 30)
-        main_layout.setSpacing(30)
+        main_layout.setContentsMargins(50, 50, 50, 50)
+        main_layout.setSpacing(36)
         
-        # Header
-        header_layout = QVBoxLayout()
-        title = QLabel("NeuralRadar Dashboard")
-        title.setStyleSheet("color: #cdd6f4; font-size: 28px; font-weight: bold;")
-        subtitle = QLabel("Network discovery, mapping and monitoring platform by NeuralShield")
-        subtitle.setStyleSheet("color: #89b4fa; font-size: 14px;")
-        header_layout.addWidget(title)
-        header_layout.addWidget(subtitle)
+        # === PREMIUM HERO SECTION ===
+        hero = QVBoxLayout()
+        hero.setSpacing(14)
         
-        main_layout.addLayout(header_layout)
+        title = QLabel("NeuralRadar")
+        title.setStyleSheet(f"font-size: 52px; font-weight: 700; color: {Theme.COLORS.PRIMARY}; letter-spacing: -1.5px;")
+        hero.addWidget(title)
         
-        # Scroll Area for Cards
+        subtitle = QLabel("Local-first network discovery, inventory and visibility platform.")
+        subtitle.setStyleSheet(f"color: {Theme.COLORS.TEXT}; font-size: 19px; font-weight: 400; max-width: 680px;")
+        hero.addWidget(subtitle)
+        
+        # Metadata line
+        meta = QLabel("NeuralShield • v0.1-alpha • Created by 0xRootNull")
+        meta.setStyleSheet(f"color: {Theme.COLORS.MUTED}; font-size: 12px; letter-spacing: 0.5px;")
+        hero.addWidget(meta)
+        
+        # Safety/privacy strip
+        privacy_strip = QLabel("LOCAL-FIRST  •  NO TELEMETRY  •  PERMISSION-BASED SCANNING")
+        privacy_strip.setStyleSheet(f"""
+            background-color: #0F172A; 
+            color: #38BDF8; 
+            padding: 14px 28px; 
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            border: 1px solid #26364F;
+        """)
+        privacy_strip.setWordWrap(True)
+        hero.addWidget(privacy_strip)
+        
+        main_layout.addLayout(hero)
+        
+        # Core active modules section
+        active_header = QLabel("CORE MODULES")
+        active_header.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {Theme.COLORS.PRIMARY}; letter-spacing: 2px; padding: 8px 0 4px;")
+        main_layout.addWidget(active_header)
+        
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet("""
-            QScrollArea {
-                border: none;
-                background-color: transparent;
-            }
-            QScrollBar:vertical {
-                border: none;
-                background: #1e1e2e;
-                width: 10px;
-                border-radius: 5px;
-            }
-            QScrollBar::handle:vertical {
-                background: #313244;
-                border-radius: 5px;
-            }
-            QScrollBar::handle:vertical:hover {
-                background: #45475a;
-            }
-        """)
+        scroll_area.setStyleSheet("QScrollArea { border: none; background: transparent; }")
         
         scroll_content = QWidget()
         scroll_content.setStyleSheet("background-color: transparent;")
-        grid_layout = QGridLayout(scroll_content)
-        grid_layout.setSpacing(20)
-        grid_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        grid = QGridLayout(scroll_content)
+        grid.setSpacing(28)
+        grid.setContentsMargins(0, 0, 0, 0)
         
-        modules = [
-            ("IPHawk", "IP discovery and active host detection module. (Coming soon)"),
-            ("PortScope", "Comprehensive port scanning and service identification. (Coming soon)"),
-            ("DeviceVault", "Persistent device inventory and asset management. (Coming soon)"),
-            ("NetMap", "Visual, interactive network topology mapping. (Coming soon)"),
-            ("WatchTower", "Uptime and latency monitoring for critical network assets. (Coming soon)"),
-            ("WebPulse", "Website, API, and SSL certificate health checks. (Coming soon)"),
-            ("ShieldAudit", "Basic security checks and vulnerability scanning. (Coming soon)"),
-            ("ContainerRadar", "Overview of Docker, LXC, and Proxmox environments. (Coming soon)")
+        # Active cards with exact symbols and descriptions
+        active_modules = [
+            ("IPHawk", "Discover active devices on local networks.", "Active", "◉"),
+            ("DeviceVault", "Store and manage local asset inventory.", "Active", "▣"),
+            ("PortScope", "Identify open TCP services safely.", "Active", "⟡"),
+            ("WebPulse", "Check HTTP/HTTPS metadata safely.", "Active", "◌"),
         ]
         
-        row, col = 0, 0
-        for title, desc in modules:
-            card = ModuleCard(title, desc)
-            grid_layout.addWidget(card, row, col)
+        row = col = 0
+        for title, desc, status, icon in active_modules:
+            card = ModuleCard(title, desc, status, icon)
+            grid.addWidget(card, row, col)
             col += 1
-            if col > 3:  # 4 columns max
+            if col > 1:  # 2-column for active to give breathing room
                 col = 0
                 row += 1
-                
+        
+        # Coming soon section
+        coming_header = QLabel("ROADMAP")
+        coming_header.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {Theme.COLORS.MUTED}; letter-spacing: 2px; padding: 24px 0 4px;")
+        main_layout.addWidget(coming_header)
+        
+        coming_modules = [
+            ("NetMap", "Visual network mapping.", "Coming Soon", ""),
+            ("WatchTower", "Uptime monitoring.", "Coming Soon", ""),
+            ("ShieldAudit", "Defensive security insights.", "Coming Soon", ""),
+            ("ContainerRadar", "Docker, LXC and Proxmox overview.", "Coming Soon", ""),
+        ]
+        
+        for title, desc, status, icon in coming_modules:
+            card = ModuleCard(title, desc, status, icon)
+            grid.addWidget(card, row, col)
+            col += 1
+            if col > 3:
+                col = 0
+                row += 1
+        
         scroll_area.setWidget(scroll_content)
-        main_layout.addWidget(scroll_area)
+        main_layout.addWidget(scroll_area, stretch=1)
+        main_layout.addStretch()

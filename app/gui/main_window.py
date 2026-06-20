@@ -6,26 +6,34 @@ from app.gui.iphawk_page import IPHawkPage
 from app.gui.devicevault_page import DeviceVaultPage
 from app.gui.portscope_page import PortScopePage
 from app.gui.webpulse_page import WebPulsePage
+from app.gui.theme import Theme
 from app.core.logger import logger
 from app.core.version import VERSION
 from app.gui.settings_page import SettingsPage
 
+
 class PlaceholderPage(QWidget):
-    def __init__(self, title):
+    """Simple placeholder for coming-soon modules with theme support."""
+    def __init__(self, title: str):
         super().__init__()
         layout = QHBoxLayout(self)
-        label = QLabel(f"{title} Module - Coming Soon")
-        label.setStyleSheet("color: #a6adc8; font-size: 24px;")
+        label = QLabel(f"{title} Module — Coming Soon")
+        label.setStyleSheet(f"color: {Theme.COLORS.TEXT_MUTED}; font-size: 24px; font-style: italic;")
         label.setAlignment(Qt.AlignCenter)
         layout.addWidget(label)
 
+
 class MainWindow(QMainWindow):
+    """Main application window with polished cyber-tech interface."""
     def __init__(self):
         super().__init__()
         
-        self.setWindowTitle(f"NeuralRadar {VERSION} - Network Visibility Platform")
-        self.setMinimumSize(1100, 750)
-        self.setStyleSheet("background-color: #181825;")
+        # Professional branding title
+        self.setWindowTitle(f"NeuralRadar {VERSION}")
+        self.setMinimumSize(1200, 800)
+        
+        # Apply the centralized professional theme
+        Theme.apply_theme(self)
         
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
@@ -34,15 +42,16 @@ class MainWindow(QMainWindow):
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(0)
         
-        # Sidebar
+        # Sidebar with updated styling
         self.sidebar = Sidebar()
         self.main_layout.addWidget(self.sidebar)
         
-        # Content Area
+        # Content area (stacked pages)
         self.content_area = QStackedWidget()
-        self.main_layout.addWidget(self.content_area)
+        self.content_area.setStyleSheet("background-color: transparent;")
+        self.main_layout.addWidget(self.content_area, stretch=5)
         
-        # Pages
+        # Initialize pages (order defines navigation indices)
         self.dashboard_page = Dashboard()
         self.content_area.addWidget(self.dashboard_page)
         
@@ -64,7 +73,7 @@ class MainWindow(QMainWindow):
         self.settings_page = SettingsPage()
         self.content_area.addWidget(self.settings_page)
         
-        # Connect sidebar buttons
+        # Connect navigation (must match page add order)
         self.sidebar.btn_dashboard.clicked.connect(lambda: self.switch_page(0, self.sidebar.btn_dashboard))
         self.sidebar.btn_iphawk.clicked.connect(lambda: self.switch_page(1, self.sidebar.btn_iphawk))
         self.sidebar.btn_portscope.clicked.connect(lambda: self.switch_page(2, self.sidebar.btn_portscope))
@@ -73,7 +82,6 @@ class MainWindow(QMainWindow):
         self.sidebar.btn_netmap.clicked.connect(lambda: self.switch_page(5, self.sidebar.btn_netmap))
         self.sidebar.btn_settings.clicked.connect(lambda: self.switch_page(6, self.sidebar.btn_settings))
         
-        # Keep track of buttons for easy unchecking
         self.nav_buttons = [
             self.sidebar.btn_dashboard,
             self.sidebar.btn_iphawk,
@@ -84,9 +92,13 @@ class MainWindow(QMainWindow):
             self.sidebar.btn_settings
         ]
         
-        logger.info("MainWindow initialized.")
+        # Default to dashboard
+        self.sidebar.btn_dashboard.setChecked(True)
         
-    def switch_page(self, index, button):
+        logger.info("MainWindow initialized with NeuralShield cyber-tech branding and theme.")
+        
+    def switch_page(self, index: int, button):
+        """Switch displayed page and update active navigation button state."""
         self.content_area.setCurrentIndex(index)
         for btn in self.nav_buttons:
             if btn != button:

@@ -1,11 +1,16 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, 
     QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox, QFrame, QSplitter,
-    QTextEdit, QComboBox
+    QTextEdit, QComboBox, QFileDialog
 )
 from PySide6.QtCore import Qt, Slot
 from app.core.database import SessionLocal
 from app.modules.devicevault.service import DeviceVaultService
+from app.modules.devicevault.exporter import (
+    export_devices_csv, 
+    export_devices_json, 
+    export_full_inventory_json
+)
 from app.core.logger import logger
 
 class DeviceVaultPage(QWidget):
@@ -63,6 +68,27 @@ class DeviceVaultPage(QWidget):
         search_layout.addWidget(self.btn_refresh)
         
         main_layout.addLayout(search_layout)
+
+        # Export buttons (minimal addition)
+        export_layout = QHBoxLayout()
+        export_label = QLabel("Export:")
+        export_label.setStyleSheet("color: #94A3B8; font-size: 13px;")
+        export_layout.addWidget(export_label)
+        
+        self.btn_export_csv = QPushButton("Devices CSV")
+        self.btn_export_csv.clicked.connect(self.export_devices_to_csv)
+        export_layout.addWidget(self.btn_export_csv)
+        
+        self.btn_export_json = QPushButton("Devices JSON")
+        self.btn_export_json.clicked.connect(self.export_devices_to_json)
+        export_layout.addWidget(self.btn_export_json)
+        
+        self.btn_export_full = QPushButton("Full Inventory JSON")
+        self.btn_export_full.clicked.connect(self.export_full_inventory)
+        export_layout.addWidget(self.btn_export_full)
+        
+        export_layout.addStretch()
+        main_layout.addLayout(export_layout)
         
         # Content Splitter (Table + Edit Details)
         splitter = QSplitter(Qt.Horizontal)
@@ -405,6 +431,60 @@ class DeviceVaultPage(QWidget):
             db.close()
 
     @Slot()
+
+    def _show_export_success(self, path: str):
+        QMessageBox.information(self, "Export Successful", f"Data exported to:
+{path}")
+    
+    def _show_no_data(self):
+        QMessageBox.information(self, "No Data", "No data available to export.")
+    
+    def _show_export_error(self, error: str):
+        QMessageBox.warning(self, "Export Failed", f"Export failed: {error}")
+        logger.error(f"Export error: {error}")
+    
+    @Slot()
+    def export_devices_to_csv(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export Devices CSV", "devices.csv", "CSV Files (*.csv);;All Files (*)"
+        )
+        if not path:
+            return
+        if not path.endswith(".csv"):
+            path += ".csv"
+        if export_devices_csv(path):
+            self._show_export_success(path)
+        else:
+            self._show_no_data()
+    
+    @Slot()
+    def export_devices_to_json(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export Devices JSON", "devices.json", "JSON Files (*.json);;All Files (*)"
+        )
+        if not path:
+            return
+        if not path.endswith(".json"):
+            path += ".json"
+        if export_devices_json(path):
+            self._show_export_success(path)
+        else:
+            self._show_no_data()
+    
+    @Slot()
+    def export_full_inventory(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export Full Inventory JSON", "inventory.json", "JSON Files (*.json);;All Files (*)"
+        )
+        if not path:
+            return
+        if not path.endswith(".json"):
+            path += ".json"
+        if export_full_inventory_json(path):
+            self._show_export_success(path)
+        else:
+            self._show_no_data()
+
     def save_manual_edits(self):
         if not self.current_device_id: return
         

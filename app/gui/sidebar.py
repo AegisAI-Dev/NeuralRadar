@@ -1,51 +1,60 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QSpacerItem, QSizePolicy
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QSpacerItem, QSizePolicy, QFrame, QHBoxLayout
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from app.gui.theme import Theme
 from app.core.version import VERSION
 
+
 class Sidebar(QWidget):
+    """Professional sidebar with NeuralShield branding and cyber-tech styling."""
+    
     def __init__(self):
         super().__init__()
-        self.setFixedWidth(220)
-        self.setStyleSheet("""
-            Sidebar {
-                background-color: #11111b;
-                border-right: 1px solid #313244;
-            }
-            QPushButton {
-                background-color: transparent;
-                color: #a6adc8;
-                text-align: left;
-                padding: 12px 20px;
-                border: none;
-                border-radius: 6px;
-                font-size: 14px;
-                margin: 2px 10px;
-            }
-            QPushButton:hover {
-                background-color: #313244;
-                color: #cdd6f4;
-            }
-            QPushButton:checked {
-                background-color: #89b4fa;
-                color: #11111b;
-                font-weight: bold;
-            }
-        """)
+        self.setObjectName("Sidebar")
+        self.setFixedWidth(240)
+        
+        # Apply theme stylesheet for sidebar and nav buttons
+        self.setStyleSheet(Theme.get_sidebar_style())
         
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 30, 0, 20)
-        layout.setSpacing(5)
+        layout.setContentsMargins(16, 32, 16, 24)
+        layout.setSpacing(8)
         
-        # Logo placeholder
-        logo_label = QLabel("NeuralRadar")
-        logo_label.setStyleSheet("color: #89b4fa; font-size: 24px; font-weight: bold; padding-bottom: 0px; padding-left: 20px;")
-        layout.addWidget(logo_label)
+        # === BRANDING HEADER ===
+        # Logo / Title
+        logo_container = QFrame()
+        logo_container.setObjectName("LogoContainer")
+        logo_layout = QVBoxLayout(logo_container)
+        logo_layout.setContentsMargins(8, 0, 8, 16)
+        logo_layout.setSpacing(4)
         
-        version_label = QLabel(VERSION)
-        version_label.setStyleSheet("color: #a6adc8; font-size: 12px; padding-bottom: 20px; padding-left: 20px;")
-        layout.addWidget(version_label)
+        logo_label = QLabel("NEURALRADAR")
+        logo_label.setObjectName("Logo")
+        logo_label.setFont(QFont("Segoe UI", 22, QFont.Weight.Bold))
+        logo_layout.addWidget(logo_label)
         
-        # Navigation Buttons
+        # Subtitle: NeuralShield
+        subtitle = QLabel("NeuralShield")
+        subtitle.setObjectName("Subtitle")
+        subtitle.setFont(QFont("Segoe UI", 10, QFont.Weight.Medium))
+        logo_layout.addWidget(subtitle)
+        
+        layout.addWidget(logo_container)
+        
+        # Version badge
+        version_frame = QFrame()
+        version_frame.setStyleSheet("background: transparent;")
+        version_layout = QHBoxLayout(version_frame)
+        version_layout.setContentsMargins(12, 0, 12, 20)
+        
+        version_badge = QLabel(f"{VERSION}")
+        version_badge.setObjectName("VersionBadge")
+        version_layout.addWidget(version_badge)
+        version_layout.addStretch()
+        
+        layout.addWidget(version_frame)
+        
+        # Navigation
         self.btn_dashboard = self.create_nav_button("Dashboard", checked=True)
         self.btn_iphawk = self.create_nav_button("IPHawk")
         self.btn_portscope = self.create_nav_button("PortScope")
@@ -61,13 +70,22 @@ class Sidebar(QWidget):
         layout.addWidget(self.btn_webpulse)
         layout.addWidget(self.btn_netmap)
         
-        layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
         
         layout.addWidget(self.btn_settings)
         
-    def create_nav_button(self, text, checked=False):
+        # Footer tagline (subtle)
+        tagline = QLabel("Local-first • Secure • Transparent")
+        tagline.setStyleSheet(f"color: {Theme.COLORS.TEXT_MUTED}; font-size: 10px; padding-top: 20px; text-align: center;")
+        tagline.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(tagline)
+        
+    def create_nav_button(self, text: str, checked: bool = False) -> QPushButton:
+        """Create styled navigation button with proper object name for theming."""
         btn = QPushButton(text)
+        btn.setObjectName("navButton")
         btn.setCheckable(True)
-        if checked:
-            btn.setChecked(True)
+        btn.setChecked(checked)
+        # Ensure property for potential dynamic styling
+        btn.setProperty("nav", True)
         return btn
