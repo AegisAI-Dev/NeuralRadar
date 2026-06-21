@@ -1,15 +1,15 @@
-# NeuralRadar v0.2-alpha
+# NeuralRadar v0.3-alpha (Internal Development Checkpoint)
 ## Built by NeuralShield
 
 > **Modular local-first network discovery, inventory and visibility platform.**
 
 NeuralRadar is a privacy-friendly, local-first network visibility tool. It provides modular capabilities for discovery and asset inventory without telemetry or external APIs.
 
-## Current Features (v0.2-alpha)
+## Current Features (v0.3-alpha Internal Checkpoint)
 
 **Core Modules**
 - **IPHawk**: Safe local device discovery
-- **DeviceVault**: Persistent local asset inventory (SQLite)
+- **DeviceVault**: Persistent local asset inventory (SQLite) with filters/search/scope selector, sortable table, result count/filter summary, filtered exports/reports
 - **PortScope**: Safe TCP connect service discovery
 - **WebPulse**: Safe HTTP/HTTPS metadata and TLS checks
 

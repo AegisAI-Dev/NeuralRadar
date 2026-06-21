@@ -1,11 +1,20 @@
-# NeuralRadar v0.2-alpha Manual Testing Checklist
+# NeuralRadar v0.3-alpha Internal Development Checkpoint Manual Testing Checklist
 
+## v0.3-alpha Internal Tests (Filters & UI)
+- [ ] **DeviceVault filters and search**: Test text search, scope selector (All Devices, Online Only, etc.), verify results update dynamically.
+- [ ] **Sortable table**: Click column headers (IP, Status, Services, etc.), verify ascending/descending sort.
+- [ ] **Result count and filter summary**: Verify "Showing X of Y results" updates with filters/search.
+- [ ] **Filtered exports/reports**: Apply filter, export or generate report, verify only filtered results are included.
+- [ ] **Scope selector persistence**: Change scope, verify it remembers on page reload or navigation.
+
+## v0.2-alpha Manual Testing Checklist
 Use this checklist to perform manual quality assurance before finalizing a release build.
 
 ## Core Setup
 - [ ] **Virtual environment setup**: Verify `venv` creation and activation works correctly across Windows and Linux.
 - [ ] **Requirements install**: Ensure `pip install -r requirements.txt` succeeds and pulls necessary packages (`PySide6`, `loguru`, `SQLAlchemy`).
-- [ ] **App startup**: Run `python app/main.py`. The GUI should launch without console errors, and the window title should display `NeuralRadar v0.2-alpha`.
+- [ ] **App startup**: Run `python app/main.py`. The GUI should launch without console errors, and the window title should display `NeuralRadar v0.3-alpha`.
+- [ ] **Version check**: Confirm app/core/version.py is v0.3-alpha.
 
 ## Dashboard
 - [ ] **Dashboard opens**: Verify hero section, safety strip, module cards, and new inventory statistics row are visible.
@@ -23,15 +32,15 @@ Use this checklist to perform manual quality assurance before finalizing a relea
 
 ## Core Modules Regression
 - [ ] **IPHawk**: Run scan, save results to DeviceVault. Verify devices appear.
-- [ ] **DeviceVault**: View devices, edit manual fields, save. Verify persistence after restart.
+- [ ] **DeviceVault**: View devices, edit manual fields, save. Verify persistence after restart. Test new filters, search, sorting.
 - [ ] **PortScope**: Scan from DeviceVault, save open services. Verify they attach to devices.
 - [ ] **WebPulse**: Run checks, save metadata. Verify TLS warnings and web records appear in stats/reports.
 - [ ] **Navigation**: Switch between all pages (Dashboard, IPHawk, DeviceVault, PortScope, WebPulse, Settings). Verify no crashes.
 
 ## Packaged Build
-- [ ] **Build**: Run `.\scripts\build_windows.ps1`.
-- [ ] **Packaged exe**: Run `dist\NeuralRadar\NeuralRadar.exe`. Verify all features work (stats, export, reports).
-- [ ] **Release ZIP**: Create `NeuralRadar-v0.2-alpha-windows-x64.zip` containing the **full** `dist\NeuralRadar\` folder (not just the .exe). Do not include database or log files.
+- [ ] **Build**: Run `.\\scripts\\build_windows.ps1`.
+- [ ] **Packaged exe**: Run `dist\\NeuralRadar\\NeuralRadar.exe`. Verify all features work (stats, export, reports, filters).
+- [ ] **Internal Checkpoint**: No public ZIP created. No website update.
 
 ## General
 - [ ] **No telemetry**: Verify no network traffic to external services during normal operation.
@@ -39,4 +48,4 @@ Use this checklist to perform manual quality assurance before finalizing a relea
 - [ ] **Logging**: Check logs for export/report success/failure messages.
 - [ ] **No secrets**: Exported reports do not contain environment variables, API keys, or system paths.
 
-All tests must pass before tagging v0.2-alpha release.
+All tests must pass before marking v0.3-alpha internal checkpoint complete. This is an internal development checkpoint only — no public release.

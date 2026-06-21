@@ -2,6 +2,15 @@
 
 All notable changes to NeuralRadar will be documented in this file.
 
+## v0.3-alpha (Internal Development Checkpoint)
+
+### Internal Checkpoint
+- DeviceVault filters, search, and scope selector
+- Filtered exports and reports
+- Result count and filter summary display
+- Sortable DeviceVault table
+- **Internal only**: No public ZIP release, no website updates
+
 ## v0.2-alpha
 
 ### Added

@@ -1,5 +1,11 @@
 # NeuralRadar Roadmap
 
+## Completed in v0.3-alpha (Internal Development Checkpoint)
+- DeviceVault filters/search/scope selector
+- Filtered exports/reports
+- Result count/filter summary 
+- Sortable DeviceVault table
+
 ## Completed in v0.2-alpha
 - DeviceVault CSV/JSON export system
 - Full Inventory JSON export
@@ -17,7 +23,7 @@
 - WebPulse (safe HTTP/HTTPS metadata and TLS checks)
 - Local-only operation with no telemetry
 
-## Upcoming Features (v0.3+)
+## Upcoming Features (v0.4+)
 - GUI polish and further theme refinements
 - Import/restore functionality for DeviceVault data
 - Optional PDF report generation
@@ -25,7 +31,6 @@
 - WatchTower uptime monitoring
 - Improved installer and signed releases
 - Better service classification and OUI database
-- Advanced filtering and search
 - Optional full inventory restore from reports
 
 **Core Philosophy Reminder**: Local-first, privacy-safe, defensive visibility only. No offensive capabilities, no telemetry, no cloud sync.
