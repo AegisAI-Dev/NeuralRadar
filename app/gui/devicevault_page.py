@@ -11,6 +11,10 @@ from app.modules.devicevault.exporter import (
     export_devices_json, 
     export_full_inventory_json
 )
+from app.modules.devicevault.reporter import (
+    generate_markdown_report,
+    generate_html_report
+)
 from app.core.logger import logger
 
 class DeviceVaultPage(QWidget):
@@ -86,6 +90,15 @@ class DeviceVaultPage(QWidget):
         self.btn_export_full = QPushButton("Full Inventory JSON")
         self.btn_export_full.clicked.connect(self.export_full_inventory)
         export_layout.addWidget(self.btn_export_full)
+        
+        # Minimal report buttons (Phase 7C)
+        self.btn_report_md = QPushButton("Generate Markdown Report")
+        self.btn_report_md.clicked.connect(self.generate_markdown_report)
+        export_layout.addWidget(self.btn_report_md)
+        
+        self.btn_report_html = QPushButton("Generate HTML Report")
+        self.btn_report_html.clicked.connect(self.generate_html_report)
+        export_layout.addWidget(self.btn_report_html)
         
         export_layout.addStretch()
         main_layout.addLayout(export_layout)
@@ -472,6 +485,37 @@ class DeviceVaultPage(QWidget):
             self._show_no_data()
     
     @Slot()
+
+    @Slot()
+    def generate_markdown_report(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save Markdown Report", "inventory-report.md", "Markdown Files (*.md);;All Files (*)"
+        )
+        if not path:
+            return
+        if not path.endswith(".md"):
+            path += ".md"
+        if generate_markdown_report(path):
+            QMessageBox.information(self, "Success", f"Markdown report saved to:
+{path}")
+        else:
+            self._show_no_data()
+    
+    @Slot()
+    def generate_html_report(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save HTML Report", "inventory-report.html", "HTML Files (*.html);;All Files (*)"
+        )
+        if not path:
+            return
+        if not path.endswith(".html"):
+            path += ".html"
+        if generate_html_report(path):
+            QMessageBox.information(self, "Success", f"HTML report saved to:
+{path}")
+        else:
+            self._show_no_data()
+
     def export_full_inventory(self):
         path, _ = QFileDialog.getSaveFileName(
             self, "Export Full Inventory JSON", "inventory.json", "JSON Files (*.json);;All Files (*)"
