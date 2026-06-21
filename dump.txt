@@ -446,7 +446,8 @@ class DeviceVaultPage(QWidget):
     @Slot()
 
     def _show_export_success(self, path: str):
-        QMessageBox.information(self, "Export Successful", f"Data exported to:\n{path}")
+        QMessageBox.information(self, "Export Successful", f"Data exported to:
+{path}")
 
     def _show_no_data(self):
         QMessageBox.information(self, "No Data", "No data available to export.")
@@ -495,7 +496,7 @@ class DeviceVaultPage(QWidget):
         if not path.endswith(".md"):
             path += ".md"
         if generate_markdown_report(path):
-            QMessageBox.information(self, "Success", f"Markdown report saved to:\n{path}")
+            QMessageBox.information(self, "Success", f"Markdown report saved to:
         else:
             self._show_no_data()
     
@@ -509,7 +510,7 @@ class DeviceVaultPage(QWidget):
         if not path.endswith(".html"):
             path += ".html"
         if generate_html_report(path):
-            QMessageBox.information(self, "Success", f"HTML report saved to:\n{path}")
+            QMessageBox.information(self, "Success", f"HTML report saved to:
         else:
             self._show_no_data()
 

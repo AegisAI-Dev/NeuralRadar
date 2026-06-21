@@ -2,6 +2,26 @@
 
 All notable changes to NeuralRadar will be documented in this file.
 
+## v0.2-alpha
+
+### Added
+- DeviceVault CSV/JSON export system
+- Full Inventory JSON export
+- Dashboard inventory statistics (Total Devices, Online, Open Services, Web Endpoints, TLS Warnings, Last Updated)
+- Refresh Stats button on dashboard
+- Local Markdown report generator
+- Local self-contained HTML report generator
+- Defensive findings/notes section in reports (informational only, no exploit guidance)
+- Preserved local-only/privacy-safe behavior throughout
+- Stability fixes for GUI theme compatibility
+
+### Security
+- Local-only operation enforced
+- No telemetry or external analytics
+- No vulnerability scanning or exploit checks
+- No cloud sync or crawling
+- Reports and exports are strictly local files
+
 ## [v0.1-alpha] - Initial Release
 
 ### Added

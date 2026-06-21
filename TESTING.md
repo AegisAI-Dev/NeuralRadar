@@ -1,35 +1,42 @@
-# NeuralRadar v0.1-alpha Manual Testing Checklist
+# NeuralRadar v0.2-alpha Manual Testing Checklist
 
 Use this checklist to perform manual quality assurance before finalizing a release build.
 
 ## Core Setup
 - [ ] **Virtual environment setup**: Verify `venv` creation and activation works correctly across Windows and Linux.
-- [ ] **Requirements install**: Ensure `pip install -r requirements.txt` succeeds and pulls necessary packages (`PySide6`, `loguru`, `SQLAlchemy`, `requests`).
-- [ ] **App startup**: Run `python app/main.py`. The GUI should launch without console errors, and the window title should display the current version.
+- [ ] **Requirements install**: Ensure `pip install -r requirements.txt` succeeds and pulls necessary packages (`PySide6`, `loguru`, `SQLAlchemy`).
+- [ ] **App startup**: Run `python app/main.py`. The GUI should launch without console errors, and the window title should display `NeuralRadar v0.2-alpha`.
 
-## IPHawk (Network Discovery)
-- [ ] **IPHawk scanning**: Input a valid local subnet and click `Start Scan`. Verify hosts populate.
-- [ ] **IPHawk Stop Scan**: Click `Stop Scan` mid-scan. The scanning should halt gracefully.
-- [ ] **Save IPHawk results to DeviceVault**: Select hosts and click `Save Results to DeviceVault`. Verify confirmation prompt appears.
+## Dashboard
+- [ ] **Dashboard opens**: Verify hero section, safety strip, module cards, and new inventory statistics row are visible.
+- [ ] **Dashboard statistics**: Confirm Total Devices, Online, Open Services, Web Endpoints, TLS Warnings, and Last Updated display correctly from existing DeviceVault data.
+- [ ] **Refresh Stats button**: Click Refresh Stats. Values should update (or show 0/— for empty database).
+- [ ] **Empty database behavior**: With an empty DeviceVault, stats should show 0 values and "—" for Last Updated.
 
-## DeviceVault (Asset Inventory)
-- [ ] **DeviceVault view**: Open DeviceVault and verify saved devices from IPHawk appear.
-- [ ] **DeviceVault editing**: Edit a device's details manually (e.g. name or override) and save.
-- [ ] **DeviceVault persistence after restart**: Close and reopen NeuralRadar. Verify devices and their manual edits are retained.
+## DeviceVault Export & Reporting
+- [ ] **Export Devices CSV**: Click button, choose location. Verify CSV is valid and opens in Excel/LibreOffice with correct columns.
+- [ ] **Export Devices JSON**: Verify JSON is pretty-formatted with metadata and correct records.
+- [ ] **Full Inventory JSON**: Verify JSON contains devices, services, and web_metadata sections with metadata.
+- [ ] **Generate Markdown Report**: Verify .md file contains header, executive summary (using stats), device/services/web tables, defensive findings, and privacy section.
+- [ ] **Generate HTML Report**: Verify self-contained .html file opens in browser with dark cyber-tech styling, all sections, and safe escaping.
+- [ ] **Empty database report/export**: Verify clean "No data available" message for reports and exports.
 
-## PortScope (TCP Port Discovery)
-- [ ] **PortScope scanning**: Scan a target device from the DeviceVault list.
-- [ ] **PortScope Stop Scan**: Stop the scan mid-way.
-- [ ] **Save PortScope results to DeviceVault**: Save discovered open ports. Verify they attach to the correct device in DeviceVault.
+## Core Modules Regression
+- [ ] **IPHawk**: Run scan, save results to DeviceVault. Verify devices appear.
+- [ ] **DeviceVault**: View devices, edit manual fields, save. Verify persistence after restart.
+- [ ] **PortScope**: Scan from DeviceVault, save open services. Verify they attach to devices.
+- [ ] **WebPulse**: Run checks, save metadata. Verify TLS warnings and web records appear in stats/reports.
+- [ ] **Navigation**: Switch between all pages (Dashboard, IPHawk, DeviceVault, PortScope, WebPulse, Settings). Verify no crashes.
 
-## WebPulse (Web Service Checks)
-- [ ] **WebPulse checks**: Input a valid URL and start check.
-- [ ] **WebPulse Stop Check**: Stop a check before it completes.
-- [ ] **WebPulse failed-result toggle**: Use the checkbox to toggle visibility of failed web checks.
-- [ ] **WebPulse TLS Warning**: Test an endpoint with a valid but slightly misconfigured/expiring certificate to trigger warning.
-- [ ] **WebPulse TLS/SNI Error**: Test an endpoint with invalid certs to trigger an error.
-- [ ] **WebPulse Protocol Mismatch**: Test HTTP over HTTPS port or vice versa.
-- [ ] **Save WebPulse results to DeviceVault**: Save results and verify they persist in the DeviceVault properly.
+## Packaged Build
+- [ ] **Build**: Run `.\scripts\build_windows.ps1`.
+- [ ] **Packaged exe**: Run `dist\NeuralRadar\NeuralRadar.exe`. Verify all features work (stats, export, reports).
+- [ ] **Release ZIP**: Create `NeuralRadar-v0.2-alpha-windows-x64.zip` containing the **full** `dist\NeuralRadar\` folder (not just the .exe). Do not include database or log files.
 
 ## General
-- [ ] **Regression checks for all modules**: Navigate through all tabs (Dashboard, Settings, etc.) while scans are running to verify UI stability.
+- [ ] **No telemetry**: Verify no network traffic to external services during normal operation.
+- [ ] **Local-only**: All exports/reports saved locally via user-selected paths.
+- [ ] **Logging**: Check logs for export/report success/failure messages.
+- [ ] **No secrets**: Exported reports do not contain environment variables, API keys, or system paths.
+
+All tests must pass before tagging v0.2-alpha release.
