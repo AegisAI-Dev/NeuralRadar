@@ -363,3 +363,32 @@ class DeviceVaultService:
             logger.error(f"Stats calculation error: {e}")
             
         return stats
+
+    @staticmethod
+    def get_filtered_devices(db: Session, query: str = "", status_filter: str = "All", device_type_filter: str = "All", vendor_filter: str = "All"):
+        """Advanced filtered query combining search and filters. Uses existing fields only."""
+        base_query = db.query(Device)
+        
+        if query.strip():
+            q = f"%{query.strip()}%"
+            base_query = base_query.filter(
+                (Device.ip_address.ilike(q)) |
+                (Device.name.ilike(q)) |
+                (Device.detected_hostname.ilike(q)) |
+                (Device.mac_address.ilike(q)) |
+                (Device.vendor.ilike(q)) |
+                (Device.device_type.ilike(q)) |
+                (Device.tags.ilike(q)) |
+                (Device.notes.ilike(q))
+            )
+        
+        if status_filter != "All":
+            base_query = base_query.filter(Device.status == status_filter)
+        
+        if device_type_filter != "All":
+            base_query = base_query.filter(Device.device_type == device_type_filter)
+        
+        if vendor_filter != "All":
+            base_query = base_query.filter(Device.vendor == vendor_filter)
+        
+        return base_query.all()
