@@ -2,6 +2,8 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame, QHBoxLayout,
 from PySide6.QtCore import Qt
 from app.gui.theme import Theme
 from app.core.version import VERSION
+import platform
+import sys
 
 
 class SettingsPage(QWidget):
@@ -85,23 +87,37 @@ class SettingsPage(QWidget):
         card_layout.addWidget(privacy_card)
         card_layout.addWidget(safety_card)
         
-        # Current modules
-        modules_label = QLabel("CURRENTLY AVAILABLE MODULES")
+        # Modules section
+        modules_label = QLabel("MODULES")
         modules_label.setStyleSheet(Theme.section_title_style())
         card_layout.addWidget(modules_label)
         
-        modules_text = QLabel("• IPHawk — Network discovery\n• DeviceVault — Asset inventory\n• PortScope — Service & port mapping\n• WebPulse — Web metadata & TLS inspection")
-        modules_text.setStyleSheet(f"""
-            color: {Theme.COLORS.MUTED};
-            font-family: monospace;
-            padding: 14px;
-            background-color: {Theme.COLORS.SURFACE};
-            border: 1px solid {Theme.COLORS.BORDER};
-            border-radius: 8px;
-            font-size: 13px;
-            line-height: 1.6;
-        """)
+        modules_text = QLabel(
+            "Dashboard: local intelligence summary and relationship overview\n"
+            "IPHawk: local network discovery and known-device checks\n"
+            "PortScope: safe TCP connect service visibility\n"
+            "WebPulse: HTTP/HTTPS metadata and TLS visibility\n"
+            "DeviceVault: local asset inventory, filters, exports and reports\n"
+            "NetMap: local relationship map and device drilldown"
+        )
+        modules_text.setStyleSheet(Theme.muted_label_style() if hasattr(Theme, 'muted_label_style') else f"color: {Theme.COLORS.MUTED}; padding: 12px;")
         card_layout.addWidget(modules_text)
+        
+        # Credits
+        credits_label = QLabel("CREDITS")
+        credits_label.setStyleSheet(Theme.section_title_style())
+        card_layout.addWidget(credits_label)
+        credits_text = QLabel("NeuralShield\nCreated by 0xRootNull\nLicense: Not specified in this build.")
+        credits_text.setStyleSheet(Theme.detail_label_style() if hasattr(Theme, 'detail_label_style') else "")
+        card_layout.addWidget(credits_text)
+        
+        # Diagnostics / System Info
+        diag_label = QLabel("DIAGNOSTICS / SYSTEM INFO")
+        diag_label.setStyleSheet(Theme.section_title_style())
+        card_layout.addWidget(diag_label)
+        diag_text = QLabel(f"Python: {sys.version.split()[0]}\nPlatform: {platform.platform()}\nMode: local-only\nDatabase: initialized")
+        diag_text.setStyleSheet(Theme.detail_label_style() if hasattr(Theme, 'detail_label_style') else f"color: {Theme.COLORS.TEXT};")
+        card_layout.addWidget(diag_text)
         
         main_layout.addWidget(info_card)
         main_layout.addStretch()
