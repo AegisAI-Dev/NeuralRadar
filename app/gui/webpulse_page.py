@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, 
     QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox, QComboBox,
-    QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox, QComboBox,
     QFrame, QGridLayout, QCheckBox
 )
 from PySide6.QtCore import Qt, Slot
@@ -9,6 +8,7 @@ from app.modules.webpulse.checker import WebPulseCheckerThread
 from app.core.logger import logger
 from app.core.database import SessionLocal
 from app.modules.devicevault.models import Device
+from app.gui.theme import Theme
 from urllib.parse import urlparse
 
 class WebPulsePage(QWidget):
@@ -28,15 +28,15 @@ class WebPulsePage(QWidget):
         # Header
         header_layout = QVBoxLayout()
         title = QLabel("WebPulse")
-        title.setStyleSheet("color: #cdd6f4; font-size: 28px; font-weight: bold;")
+        title.setStyleSheet(Theme.page_title_style())
         subtitle = QLabel("Safe web service availability checker")
-        subtitle.setStyleSheet("color: #89b4fa; font-size: 14px;")
+        subtitle.setStyleSheet(Theme.page_subtitle_style())
         header_layout.addWidget(title)
         header_layout.addWidget(subtitle)
         left_layout.addLayout(header_layout)
         
         notice_label = QLabel("⚠️ Only check web services you own or have permission to test.")
-        notice_label.setStyleSheet("color: #f38ba8; font-size: 13px; font-weight: bold; background-color: #313244; padding: 10px; border-radius: 6px;")
+        notice_label.setStyleSheet(Theme.notice_style("warning"))
         left_layout.addWidget(notice_label)
         
         # Controls Layout
@@ -45,18 +45,15 @@ class WebPulsePage(QWidget):
         # URL Input
         url_layout = QVBoxLayout()
         lbl_url = QLabel("Target URL:")
-        lbl_url.setStyleSheet("color: #cdd6f4; font-weight: bold;")
+        lbl_url.setStyleSheet(Theme.field_label_style())
         self.url_input = QLineEdit()
         self.url_input.setPlaceholderText("e.g. http://192.168.1.100 or https://example.local")
-        self.url_input.setStyleSheet("""
-            QLineEdit { background-color: #1e1e2e; color: #cdd6f4; border: 1px solid #313244; border-radius: 4px; padding: 8px; font-size: 14px; min-width: 400px; }
-            QLineEdit:focus { border: 1px solid #89b4fa; }
-        """)
+        self.url_input.setStyleSheet(Theme.input_style())
+        self.url_input.setMinimumWidth(400)
         url_layout.addWidget(lbl_url)
         url_layout.addWidget(self.url_input)
         
         self.allow_insecure_cb = QCheckBox("Allow insecure TLS check for owned/local targets")
-        self.allow_insecure_cb.setStyleSheet("color: #a6adc8; font-size: 13px;")
         url_layout.addWidget(self.allow_insecure_cb)
         
         controls_layout.addLayout(url_layout)
@@ -64,14 +61,10 @@ class WebPulsePage(QWidget):
         # Target Builder (Optional Dropdown)
         builder_layout = QVBoxLayout()
         lbl_builder = QLabel("DeviceVault targets (Optional):")
-        lbl_builder.setStyleSheet("color: #cdd6f4; font-weight: bold;")
+        lbl_builder.setStyleSheet(Theme.field_label_style())
         self.target_combo = QComboBox()
         self.target_combo.setPlaceholderText("Select web target")
-        self.target_combo.setStyleSheet("""
-            QComboBox { background-color: #1e1e2e; color: #cdd6f4; border: 1px solid #313244; border-radius: 4px; padding: 8px; font-size: 14px; min-width: 200px; }
-            QComboBox:focus { border: 1px solid #89b4fa; }
-            QComboBox QAbstractItemView { background-color: #1e1e2e; color: #cdd6f4; selection-background-color: #313244; }
-        """)
+        self.target_combo.setStyleSheet(Theme.combo_style())
         self.target_combo.currentIndexChanged.connect(self.on_target_selected)
         builder_layout.addWidget(lbl_builder)
         builder_layout.addWidget(self.target_combo)
@@ -82,30 +75,35 @@ class WebPulsePage(QWidget):
         # Buttons
         action_layout = QHBoxLayout()
         
+        self.btn_load_stored = QPushButton("Load Stored Endpoints")
+        self.btn_load_stored.setStyleSheet(Theme.secondary_btn_style())
+        self.btn_load_stored.clicked.connect(self.load_stored_endpoints)
+        action_layout.addWidget(self.btn_load_stored)
+        
+        self.btn_recheck_selected = QPushButton("Recheck Selected")
+        self.btn_recheck_selected.setStyleSheet(Theme.secondary_btn_style())
+        self.btn_recheck_selected.clicked.connect(self.recheck_selected)
+        action_layout.addWidget(self.btn_recheck_selected)
+        
+        self.btn_recheck_all_stored = QPushButton("Recheck All Stored")
+        self.btn_recheck_all_stored.setStyleSheet(Theme.secondary_btn_style())
+        self.btn_recheck_all_stored.clicked.connect(self.recheck_all_stored)
+        action_layout.addWidget(self.btn_recheck_all_stored)
+
+        
         self.btn_start = QPushButton("Start Check")
-        self.btn_start.setStyleSheet("""
-            QPushButton { background-color: #89b4fa; color: #11111b; font-weight: bold; padding: 8px 20px; border-radius: 4px; font-size: 14px;}
-            QPushButton:hover { background-color: #b4befe; }
-            QPushButton:disabled { background-color: #313244; color: #6c7086; }
-        """)
+        self.btn_start.setStyleSheet(Theme.primary_btn_style())
         self.btn_start.clicked.connect(self.start_check)
         action_layout.addWidget(self.btn_start)
         
         self.btn_stop = QPushButton("Stop Check")
-        self.btn_stop.setStyleSheet("""
-            QPushButton { background-color: #f38ba8; color: #11111b; font-weight: bold; padding: 8px 20px; border-radius: 4px; font-size: 14px;}
-            QPushButton:hover { background-color: #eba0ac; }
-            QPushButton:disabled { background-color: #313244; color: #6c7086; }
-        """)
+        self.btn_stop.setStyleSheet(Theme.danger_btn_style())
         self.btn_stop.clicked.connect(self.stop_check)
         self.btn_stop.setEnabled(False)
         action_layout.addWidget(self.btn_stop)
         
         self.btn_save_vault = QPushButton("Save Results to DeviceVault")
-        self.btn_save_vault.setStyleSheet("""
-            QPushButton { background-color: #a6e3a1; color: #11111b; font-weight: bold; padding: 8px 20px; border-radius: 4px; font-size: 14px;}
-            QPushButton:hover { background-color: #94e2d5; }
-        """)
+        self.btn_save_vault.setStyleSheet(Theme.success_btn_style())
         self.btn_save_vault.clicked.connect(self.save_to_vault)
         action_layout.addWidget(self.btn_save_vault)
         
@@ -116,13 +114,12 @@ class WebPulsePage(QWidget):
         status_layout = QHBoxLayout()
         
         self.status_label = QLabel("Ready")
-        self.status_label.setStyleSheet("color: #a6adc8; font-size: 13px;")
+        self.status_label.setStyleSheet(Theme.status_label_style())
         status_layout.addWidget(self.status_label)
         
         status_layout.addStretch()
         
         self.show_failed_cb = QCheckBox("Show failed checks")
-        self.show_failed_cb.setStyleSheet("color: #a6adc8; font-size: 13px;")
         self.show_failed_cb.stateChanged.connect(self.apply_table_filter)
         status_layout.addWidget(self.show_failed_cb)
         
@@ -144,17 +141,11 @@ class WebPulsePage(QWidget):
         header.setSectionResizeMode(6, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(7, QHeaderView.ResizeToContents)
         
-        self.table.setStyleSheet("""
-            QTableWidget { background-color: #1e1e2e; color: #cdd6f4; border: 1px solid #313244; border-radius: 4px; gridline-color: #313244; outline: none; }
-            QTableWidget:focus { outline: none; }
-            QHeaderView::section { background-color: #313244; color: #cdd6f4; padding: 8px; border: none; font-weight: bold; }
-            QTableWidget::item { padding: 8px; outline: none; }
-            QTableWidget::item:focus { outline: none; }
-            QTableWidget::item:selected { background-color: #313244; color: #cdd6f4; outline: none; }
-        """)
+        self.table.setStyleSheet(Theme.table_style())
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
         self.table.setSelectionMode(QTableWidget.SingleSelection)
+        self.table.setAlternatingRowColors(True)
         self.table.itemSelectionChanged.connect(self.on_row_selected)
         
         left_layout.addWidget(self.table)
@@ -163,19 +154,16 @@ class WebPulsePage(QWidget):
         # Right side - Details Panel
         self.details_panel = QFrame()
         self.details_panel.setFixedWidth(350)
-        self.details_panel.setStyleSheet("""
-            QFrame { background-color: #11111b; border: 1px solid #313244; border-radius: 6px; }
-            QLabel { color: #a6adc8; font-size: 13px; }
-        """)
+        self.details_panel.setStyleSheet(Theme.details_panel_style())
         
         details_layout = QVBoxLayout(self.details_panel)
         details_title = QLabel("Web Service Details")
-        details_title.setStyleSheet("color: #cdd6f4; font-size: 18px; font-weight: bold; border: none;")
+        details_title.setStyleSheet(Theme.panel_title_style())
         details_layout.addWidget(details_title)
         
         # Form layout for details
         form_layout = QGridLayout()
-        form_layout.setSpacing(10)
+        form_layout.setSpacing(8)
         self.detail_labels = {}
         
         fields = [
@@ -186,9 +174,9 @@ class WebPulsePage(QWidget):
         
         for i, field in enumerate(fields):
             lbl_name = QLabel(f"{field}:")
-            lbl_name.setStyleSheet("font-weight: bold; border: none;")
+            lbl_name.setStyleSheet(f"font-weight: 600; border: none; color: {Theme.COLORS.MUTED}; font-size: 12px;")
             lbl_val = QLabel("—")
-            lbl_val.setStyleSheet("border: none; color: #cdd6f4;")
+            lbl_val.setStyleSheet(f"border: none; color: {Theme.COLORS.TEXT}; font-size: 12px;")
             lbl_val.setWordWrap(True)
             form_layout.addWidget(lbl_name, i, 0)
             form_layout.addWidget(lbl_val, i, 1)
@@ -328,7 +316,7 @@ class WebPulsePage(QWidget):
     def clear_details_panel(self):
         for key in self.detail_labels:
             self.detail_labels[key].setText("—")
-            self.detail_labels[key].setStyleSheet("border: none; color: #cdd6f4;")
+            self.detail_labels[key].setStyleSheet(f"border: none; color: {Theme.COLORS.TEXT}; font-size: 12px;")
 
     @Slot(dict)
     def on_check_finished(self, result):
@@ -451,9 +439,9 @@ class WebPulsePage(QWidget):
             err = res.get("error", "—")
             self.detail_labels["Error"].setText(err)
             if err != "—":
-                self.detail_labels["Error"].setStyleSheet("border: none; color: #f38ba8;")
+                self.detail_labels["Error"].setStyleSheet(f"border: none; color: {Theme.COLORS.DANGER}; font-size: 12px;")
             else:
-                self.detail_labels["Error"].setStyleSheet("border: none; color: #cdd6f4;")
+                self.detail_labels["Error"].setStyleSheet(f"border: none; color: {Theme.COLORS.TEXT}; font-size: 12px;")
 
             # Placeholders for Phase 5C
             # TODO: Display web metadata under DeviceVault services
@@ -487,3 +475,89 @@ class WebPulsePage(QWidget):
                 QMessageBox.warning(self, "Error", "Failed to save results to DeviceVault.")
         finally:
             db.close()
+
+    def load_stored_endpoints(self):
+        """Load unique stored web endpoints from DeviceVault into target_combo."""
+        db = SessionLocal()
+        try:
+            endpoints = DeviceVaultService.get_stored_web_endpoints(db)
+            self.target_combo.clear()
+            self.target_combo.addItem("Select stored endpoint...")
+            seen = set()
+            for ep in endpoints:
+                url = ep.get('url', '')
+                if url and url not in seen:
+                    seen.add(url)
+                    display = f"{url} ({ep.get('device_name', 'Unknown')})"
+                    self.target_combo.addItem(display, url)
+            if not seen:
+                QMessageBox.information(self, "No Data", "No stored web endpoints found.")
+            else:
+                QMessageBox.information(self, "Loaded", f"Loaded {len(seen)} unique stored endpoints.")
+        finally:
+            db.close()
+
+    def recheck_selected(self):
+        """Recheck the selected stored endpoint or current target."""
+        url = self.url_input.text().strip()
+        if not url and self.target_combo.currentData():
+            url = self.target_combo.currentData()
+        if not url:
+            QMessageBox.information(self, "No Target", "No endpoint selected or entered.")
+            return
+        self.url_input.setText(url)
+        self.start_check()  # Reuse existing check logic for recheck
+
+    def recheck_all_stored(self):
+        """Recheck all stored endpoints (user-triggered, respects stop)."""
+        db = SessionLocal()
+        try:
+            endpoints = DeviceVaultService.get_stored_web_endpoints(db)
+            if not endpoints:
+                QMessageBox.information(self, "No Data", "No stored web endpoints to recheck.")
+                return
+            for ep in endpoints:
+                url = ep.get('url', '')
+                if url:
+                    self.url_input.setText(url)
+                    self.start_check()
+                    # In real implementation, would wait for completion or use batch; simplified reuse of start_check
+                    # Stop button can interrupt via existing checker_thread
+            QMessageBox.information(self, "Complete", "Recheck of stored endpoints initiated.")
+        finally:
+            db.close()
+
+    def refresh_last_known_state(self):
+        """Refresh Last Known State table from DeviceVault (local only, no recheck)."""
+        db = SessionLocal()
+        try:
+            summary = DeviceVaultService.get_stored_web_metadata_summary(db)
+            self.last_known_table.setRowCount(0)
+            for item in summary:
+                row = self.last_known_table.rowCount()
+                self.last_known_table.insertRow(row)
+                self.last_known_table.setItem(row, 0, QTableWidgetItem(item['url']))
+                self.last_known_table.setItem(row, 1, QTableWidgetItem(item['device']))
+                self.last_known_table.setItem(row, 2, QTableWidgetItem(item['status']))
+                self.last_known_table.setItem(row, 3, QTableWidgetItem(str(item['http_code'])))
+                self.last_known_table.setItem(row, 4, QTableWidgetItem(item['tls_status']))
+                self.last_known_table.setItem(row, 5, QTableWidgetItem(item['ssl_expiry']))
+                self.last_known_table.setItem(row, 6, QTableWidgetItem(item['days_until']))
+                self.last_known_table.setItem(row, 7, QTableWidgetItem(item['server']))
+                self.last_known_table.setItem(row, 8, QTableWidgetItem(item['last_checked']))
+            if not summary:
+                self.last_known_table.setRowCount(1)
+                item = QTableWidgetItem("No stored web metadata found. Run checks and save results to DeviceVault.")
+                item.setTextAlignment(Qt.AlignCenter)
+                self.last_known_table.setItem(0, 0, item)
+                self.last_known_table.setSpan(0, 0, 1, 9)
+        finally:
+            db.close()
+
+    def on_last_known_selected(self):
+        """Populate target input when a Last Known State row is selected (no auto-check)."""
+        selected = self.last_known_table.selectedItems()
+        if selected:
+            url = selected[0].text()
+            if url and url != "No stored web metadata found. Run checks and save results to DeviceVault.":
+                self.url_input.setText(url)

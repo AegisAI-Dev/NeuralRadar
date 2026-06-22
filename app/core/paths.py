@@ -40,3 +40,10 @@ def get_logs_dir():
 def get_log_file_path():
     """Get the path to the main log file."""
     return os.path.join(get_logs_dir(), 'neuralradar.log')
+
+
+def get_filter_presets_path():
+    """Get the path to the DeviceVault filter presets JSON file.
+    Uses the shared data directory for both dev and packaged modes.
+    """
+    return os.path.join(get_data_dir(), 'devicevault_filter_presets.json')

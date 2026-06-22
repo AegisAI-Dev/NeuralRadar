@@ -56,7 +56,23 @@ $PyInstallerArgs = @(
     "--noconfirm",
     "--onedir",
     "--windowed",
-    "--name", "NeuralRadar"
+    "--name", "NeuralRadar",
+    "--hidden-import=PySide6.QtCore",
+    "--hidden-import=PySide6.QtGui",
+    "--hidden-import=PySide6.QtWidgets",
+    "--hidden-import=shiboken6",
+    "--hidden-import=sqlalchemy",
+    "--hidden-import=loguru",
+    "--hidden-import=sqlalchemy.orm",
+    "--hidden-import=PySide6.QtXml",
+    "--hidden-import=app.gui.devicevault_page",
+    "--hidden-import=app.gui.iphawk_page",
+    "--hidden-import=app.gui.portscope_page",
+    "--hidden-import=app.gui.webpulse_page",
+    "--hidden-import=app.gui.main_window",
+    "--hidden-import=app.core.version",
+    "--hidden-import=app.core.paths"
+    "--collect-all=PySide6"
 )
 
 if (Test-Path "app\assets\icons\neuralradar.ico") {

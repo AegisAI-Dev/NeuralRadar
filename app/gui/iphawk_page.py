@@ -7,7 +7,9 @@ from app.modules.iphawk.scanner import ScannerThread
 from app.modules.devicevault.service import DeviceVaultService
 from app.core.database import SessionLocal
 from app.core.logger import logger
+from app.gui.theme import Theme
 import ipaddress
+import socket
 
 class IPHawkPage(QWidget):
     def __init__(self):
@@ -22,115 +24,116 @@ class IPHawkPage(QWidget):
         # Header
         header_layout = QVBoxLayout()
         title = QLabel("IPHawk")
-        title.setStyleSheet("color: #cdd6f4; font-size: 28px; font-weight: bold;")
+        title.setStyleSheet(Theme.page_title_style())
         subtitle = QLabel("Local network discovery module")
-        subtitle.setStyleSheet("color: #89b4fa; font-size: 14px;")
+        subtitle.setStyleSheet(Theme.page_subtitle_style())
         header_layout.addWidget(title)
         header_layout.addWidget(subtitle)
         main_layout.addLayout(header_layout)
         
         # Security Notice
         notice_label = QLabel("⚠️ Only scan networks you own or have permission to test.")
-        notice_label.setStyleSheet("color: #f38ba8; font-size: 13px; font-weight: bold; background-color: #313244; padding: 10px; border-radius: 6px;")
+        notice_label.setStyleSheet(Theme.notice_style("warning"))
         main_layout.addWidget(notice_label)
         
-        # Controls
-        controls_layout = QHBoxLayout()
-        
+        # Controls Area
+        controls_frame = QFrame()
+        controls_frame.setStyleSheet(Theme.section_frame_style())
+        controls_vbox = QVBoxLayout(controls_frame)
+        controls_vbox.setSpacing(15)
+
+        # Input and Auto-Detect Row
+        input_row = QHBoxLayout()
         self.subnet_input = QLineEdit()
         self.subnet_input.setPlaceholderText("e.g. 192.168.1.0/24")
-        self.subnet_input.setStyleSheet("""
-            QLineEdit {
-                background-color: #1e1e2e;
-                color: #cdd6f4;
-                border: 1px solid #313244;
-                border-radius: 4px;
-                padding: 10px;
-                font-size: 14px;
-            }
-            QLineEdit:focus {
-                border: 1px solid #89b4fa;
-            }
-        """)
-        controls_layout.addWidget(self.subnet_input)
+        self.subnet_input.setStyleSheet(Theme.input_style())
+        input_row.addWidget(self.subnet_input)
         
+        self.btn_detect = QPushButton("Detect Network")
+        self.btn_detect.setStyleSheet(Theme.secondary_btn_style())
+        self.btn_detect.clicked.connect(self.detect_network)
+        input_row.addWidget(self.btn_detect)
+        
+        controls_vbox.addLayout(input_row)
+
+        self.detected_label = QLabel("")
+        self.detected_label.setStyleSheet(Theme.muted_label_style())
+        controls_vbox.addWidget(self.detected_label)
+
+        # Actions Row
+        action_row = QHBoxLayout()
         self.btn_start = QPushButton("Start Scan")
-        self.btn_start.setStyleSheet("""
-            QPushButton {
-                background-color: #89b4fa;
-                color: #11111b;
-                font-weight: bold;
-                padding: 10px 20px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #b4befe;
-            }
-            QPushButton:disabled {
-                background-color: #313244;
-                color: #6c7086;
-            }
-        """)
+        self.btn_start.setStyleSheet(Theme.primary_btn_style())
         self.btn_start.clicked.connect(self.start_scan)
-        controls_layout.addWidget(self.btn_start)
+        action_row.addWidget(self.btn_start)
         
         self.btn_stop = QPushButton("Stop Scan")
-        self.btn_stop.setStyleSheet("""
-            QPushButton {
-                background-color: #f38ba8;
-                color: #11111b;
-                font-weight: bold;
-                padding: 10px 20px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #eba0ac;
-            }
-            QPushButton:disabled {
-                background-color: #313244;
-                color: #6c7086;
-            }
-        """)
+        self.btn_stop.setStyleSheet(Theme.danger_btn_style())
         self.btn_stop.clicked.connect(self.stop_scan)
         self.btn_stop.setEnabled(False)
-        controls_layout.addWidget(self.btn_stop)
+        action_row.addWidget(self.btn_stop)
         
         self.btn_save_vault = QPushButton("Save Results to DeviceVault")
-        self.btn_save_vault.setStyleSheet("""
-            QPushButton {
-                background-color: #a6e3a1;
-                color: #11111b;
-                font-weight: bold;
-                padding: 10px 20px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #94e2d5;
-            }
-            QPushButton:disabled {
-                background-color: #313244;
-                color: #6c7086;
-            }
-        """)
+        self.btn_save_vault.setStyleSheet(Theme.success_btn_style())
         self.btn_save_vault.clicked.connect(self.save_to_devicevault)
         self.btn_save_vault.setEnabled(False)
-        controls_layout.addWidget(self.btn_save_vault)
+        action_row.addWidget(self.btn_save_vault)
+        action_row.addStretch()
+
+        controls_vbox.addLayout(action_row)
+        main_layout.addWidget(controls_frame)
         
-        main_layout.addLayout(controls_layout)
+        # Known Devices (Phase 11A - compact table from DeviceVault, safe single-IP recheck only)
+        known_frame = QFrame()
+        known_frame.setStyleSheet(Theme.section_frame_style())
+        known_frame.setMaximumHeight(280)
+        known_layout = QVBoxLayout(known_frame)
+        
+        known_title = QLabel("KNOWN DEVICES")
+        known_title.setStyleSheet(Theme.section_title_style())
+        known_layout.addWidget(known_title)
+        
+        self.known_devices_table = QTableWidget(0, 9)
+        self.known_devices_table.setHorizontalHeaderLabels([
+            "Name", "IP Address", "MAC Address", "Vendor", "Device Type", "Last Known Status", "Last Seen", "Current Status", "Change"
+        ])
+        self.known_devices_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.known_devices_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.known_devices_table.setStyleSheet(Theme.compact_table_style())
+        self.known_devices_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.known_devices_table.setSelectionMode(QTableWidget.SingleSelection)
+        self.known_devices_table.setAlternatingRowColors(True)
+        self.known_devices_table.itemSelectionChanged.connect(self.on_known_device_selected)
+        known_layout.addWidget(self.known_devices_table)
+        
+        known_btn_layout = QHBoxLayout()
+        self.btn_load_known = QPushButton("Load Known Devices")
+        self.btn_load_known.setStyleSheet(Theme.secondary_btn_style())
+        self.btn_load_known.clicked.connect(self.load_known_devices)
+        known_btn_layout.addWidget(self.btn_load_known)
+        
+        self.btn_recheck_selected_device = QPushButton("Recheck Selected Device")
+        self.btn_recheck_selected_device.setStyleSheet(Theme.secondary_btn_style())
+        self.btn_recheck_selected_device.clicked.connect(self.recheck_selected_device)
+        known_btn_layout.addWidget(self.btn_recheck_selected_device)
+        
+        self.btn_recheck_all_known = QPushButton("Recheck All Known Devices")
+        self.btn_recheck_all_known.setStyleSheet(Theme.secondary_btn_style())
+        self.btn_recheck_all_known.clicked.connect(self.recheck_all_known_devices)
+        known_btn_layout.addWidget(self.btn_recheck_all_known)
+        known_btn_layout.addStretch()
+        
+        known_layout.addLayout(known_btn_layout)
+        main_layout.addWidget(known_frame)
         
         # Status Label
         self.status_label = QLabel("Ready")
-        self.status_label.setStyleSheet("color: #a6adc8; font-size: 13px;")
+        self.status_label.setStyleSheet(Theme.status_label_style())
         main_layout.addWidget(self.status_label)
         
         # Content Splitter (Table + Details)
         splitter = QSplitter(Qt.Horizontal)
         splitter.setHandleWidth(10)
-        splitter.setStyleSheet("""
-            QSplitter::handle {
-                background-color: transparent;
-            }
-        """)
         
         # Results Table
         self.table = QTableWidget(0, 7)
@@ -147,59 +150,23 @@ class IPHawkPage(QWidget):
         header.setSectionResizeMode(5, QHeaderView.ResizeToContents) # Response Time
         header.setSectionResizeMode(6, QHeaderView.ResizeToContents) # Last Seen
         
-        self.table.setStyleSheet("""
-            QTableWidget {
-                background-color: #1e1e2e;
-                color: #cdd6f4;
-                border: 1px solid #313244;
-                border-radius: 4px;
-                gridline-color: #313244;
-                outline: none;
-            }
-            QTableWidget:focus {
-                outline: none;
-            }
-            QHeaderView::section {
-                background-color: #313244;
-                color: #cdd6f4;
-                padding: 8px;
-                border: none;
-                font-weight: bold;
-            }
-            QTableWidget::item {
-                padding: 8px;
-                outline: none;
-            }
-            QTableWidget::item:focus {
-                outline: none;
-            }
-            QTableWidget::item:selected {
-                background-color: #313244;
-                color: #cdd6f4;
-                outline: none;
-            }
-        """)
+        self.table.setStyleSheet(Theme.table_style())
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
         self.table.setSelectionMode(QTableWidget.SingleSelection)
+        self.table.setAlternatingRowColors(True)
         self.table.itemSelectionChanged.connect(self.on_table_selection)
         
         splitter.addWidget(self.table)
         
         # Details Panel
         self.details_panel = QFrame()
-        self.details_panel.setStyleSheet("""
-            QFrame {
-                background-color: #1e1e2e;
-                border: 1px solid #313244;
-                border-radius: 4px;
-            }
-        """)
+        self.details_panel.setStyleSheet(Theme.details_panel_style())
         self.details_layout = QVBoxLayout(self.details_panel)
         self.details_layout.setAlignment(Qt.AlignTop)
         
         panel_title = QLabel("Device Details")
-        panel_title.setStyleSheet("color: #cdd6f4; font-size: 16px; font-weight: bold; border: none; padding-bottom: 10px;")
+        panel_title.setStyleSheet(Theme.panel_title_style())
         self.details_layout.addWidget(panel_title)
         
         self.details_labels = {}
@@ -210,14 +177,14 @@ class IPHawkPage(QWidget):
         
         for f in fields:
             lbl = QLabel(f"<b>{f}:</b> —")
-            lbl.setStyleSheet("color: #a6adc8; font-size: 13px; border: none; padding: 4px 0;")
+            lbl.setStyleSheet(Theme.detail_label_style())
             lbl.setWordWrap(True)
             self.details_layout.addWidget(lbl)
             self.details_labels[f] = lbl
             
         splitter.addWidget(self.details_panel)
-        splitter.setStretchFactor(0, 7)
-        splitter.setStretchFactor(1, 3)
+        splitter.setStretchFactor(0, 6)
+        splitter.setStretchFactor(1, 4)
         
         main_layout.addWidget(splitter)
         
@@ -367,10 +334,10 @@ class IPHawkPage(QWidget):
         self.details_labels["Discovery Source"].setText(f"<b>Discovery Source:</b> {hd.get('source') or '—'}")
         
         conf = hd.get('confidence') or '—'
-        color = "#cdd6f4"
-        if conf == "High": color = "#a6e3a1"
-        elif conf == "Medium": color = "#f9e2af"
-        elif conf == "Low": color = "#f38ba8"
+        color = Theme.COLORS.TEXT
+        if conf == "High": color = Theme.COLORS.SUCCESS
+        elif conf == "Medium": color = Theme.COLORS.WARNING
+        elif conf == "Low": color = Theme.COLORS.DANGER
         self.details_labels["Confidence"].setText(f"<b>Confidence:</b> <span style='color:{color};'>{conf}</span>")
         
         self.details_labels["Manual Override"].setText(f"<b>Manual Override:</b> {hd.get('manual_override') or 'No'}")
@@ -430,3 +397,108 @@ class IPHawkPage(QWidget):
         self.btn_stop.setEnabled(False)
         if self.host_data_map:
             self.btn_save_vault.setEnabled(True)
+
+    def load_known_devices(self):
+        """Load known devices from DeviceVault into known_devices_table."""
+        db = SessionLocal()
+        try:
+            summary = DeviceVaultService.get_known_devices_summary(db)
+            self.known_devices_table.setRowCount(0)
+            for item in summary:
+                row = self.known_devices_table.rowCount()
+                self.known_devices_table.insertRow(row)
+                self.known_devices_table.setItem(row, 0, QTableWidgetItem(item['name']))
+                self.known_devices_table.setItem(row, 1, QTableWidgetItem(item['ip_address']))
+                self.known_devices_table.setItem(row, 2, QTableWidgetItem(item['mac_address']))
+                self.known_devices_table.setItem(row, 3, QTableWidgetItem(item['vendor']))
+                self.known_devices_table.setItem(row, 4, QTableWidgetItem(item['device_type']))
+                self.known_devices_table.setItem(row, 5, QTableWidgetItem(item['status']))
+                self.known_devices_table.setItem(row, 6, QTableWidgetItem(item['last_seen']))
+                self.known_devices_table.setItem(row, 7, QTableWidgetItem("—"))  # Current Status
+                self.known_devices_table.setItem(row, 8, QTableWidgetItem("Unknown"))  # Change
+            if not summary:
+                self.known_devices_table.setRowCount(1)
+                no_data_item = QTableWidgetItem("No known devices found. Run IPHawk scan and save results to DeviceVault.")
+                no_data_item.setTextAlignment(Qt.AlignCenter)
+                self.known_devices_table.setItem(0, 0, no_data_item)
+                self.known_devices_table.setSpan(0, 0, 1, 9)
+        finally:
+            db.close()
+
+    def on_known_device_selected(self):
+        """Populate target when a known device row is selected (no auto-scan)."""
+        selected = self.known_devices_table.selectedItems()
+        if selected:
+            ip = self.known_devices_table.item(selected[0].row(), 1).text()
+            if ip and ip != "—":
+                self.subnet_input.setText(ip)
+
+    def recheck_selected_device(self):
+        """Recheck only the selected known device IP using existing safe logic (no full subnet)."""
+        selected = self.known_devices_table.selectedItems()
+        if not selected:
+            QMessageBox.information(self, "No Selection", "No known device selected.")
+            return
+        row = selected[0].row()
+        ip = self.known_devices_table.item(row, 1).text()
+        if ip and ip != "—":
+            self.subnet_input.setText(ip)
+            self.start_scan()  # Reuse existing safe IP check for the single IP
+
+    def recheck_all_known_devices(self):
+        """Recheck all loaded known devices (user-triggered, reuses existing safety; no subnet expansion)."""
+        db = SessionLocal()
+        try:
+            summary = DeviceVaultService.get_known_devices_summary(db)
+            if not summary:
+                QMessageBox.information(self, "No Data", "No known devices to recheck.")
+                return
+            for item in summary:
+                ip = item['ip_address']
+                if ip and ip != "—":
+                    self.subnet_input.setText(ip)
+                    self.start_scan()
+            QMessageBox.information(self, "Recheck Initiated", "Recheck of known devices started using existing safe logic.")
+        finally:
+            db.close()
+
+    def detect_network(self):
+        """Auto-detect local IPv4 network and pre-fill subnet input. No scan triggered."""
+        cidr, local_ip, interface = self._detect_local_ipv4_network()
+        if cidr:
+            self.subnet_input.setText(cidr)
+            self.detected_label.setText(f"Detected local network: {cidr} via {interface or 'LAN'} (local IP: {local_ip})")
+            logger.info(f"Auto-detected local network: {cidr} (IP: {local_ip})")
+        else:
+            self.detected_label.setText("Could not auto-detect local network. Please enter subnet manually.")
+            logger.warning("Local network detection failed.")
+
+    def _detect_local_ipv4_network(self):
+        """Safe best-effort local IPv4 network detection using stdlib only. No network calls."""
+        try:
+            # Get local IP by connecting to a public DNS (does not send data)
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+            s.close()
+            
+            # Determine CIDR based on private range (safe assumption for home/lab networks)
+            if local_ip.startswith('10.'):
+                cidr = local_ip.rsplit('.', 1)[0] + '.0/24'
+            elif local_ip.startswith('172.'):
+                cidr = local_ip.rsplit('.', 2)[0] + '.0/16'
+            elif local_ip.startswith('192.168.'):
+                cidr = local_ip.rsplit('.', 1)[0] + '.0/24'
+            else:
+                cidr = local_ip.rsplit('.', 1)[0] + '.0/24'
+            
+            interface = "LAN"
+            if local_ip.startswith('127.'):
+                interface = "Loopback"
+            elif local_ip.startswith('169.254.'):
+                interface = "APIPA"
+            
+            return cidr, local_ip, interface
+        except Exception as e:
+            logger.error(f"Network detection error: {e}")
+            return None, None, None

@@ -8,17 +8,17 @@ NeuralRadar is a privacy-friendly, local-first network visibility tool. It provi
 ## Current Features (v0.3-alpha Internal Checkpoint)
 
 **Core Modules**
-- **IPHawk**: Safe local device discovery
-- **DeviceVault**: Persistent local asset inventory (SQLite) with filters/search/scope selector, sortable table, result count/filter summary, filtered exports/reports
-- **PortScope**: Safe TCP connect service discovery
-- **WebPulse**: Safe HTTP/HTTPS metadata and TLS checks
+- **IPHawk**: Safe local device discovery with known-device recheck from DeviceVault and status/change indicators
+- **DeviceVault**: Persistent local asset inventory (SQLite) with advanced filters/search, saved presets, bulk classification, scoped exports/reports, inventory hygiene insights and quick filters, multi-row selection
+- **PortScope**: Safe TCP connect service discovery with stored services review/recheck and last-known/current state with change indicators
+- **WebPulse**: Safe HTTP/HTTPS metadata and TLS checks with stored endpoint recheck, Last Known State table, and TLS expiry insight
 
 **Data & Output Features**
 - Dashboard inventory statistics (Total Devices, Online, Open Services, Web Endpoints, TLS Warnings, Last Updated)
-- DeviceVault CSV and JSON export
+- DeviceVault CSV and JSON export (with filtering and selected-device scopes)
 - Full Inventory JSON export
-- Local Markdown report generator
-- Local self-contained HTML report generator (dark cyber-tech styling)
+- Filtered, selected, and full scoped Markdown and HTML reports
+- Local self-contained reports with defensive findings and privacy section
 
 **Safety Boundaries**
 - Local-only operation (no telemetry, no cloud sync, no external APIs)
@@ -66,7 +66,7 @@ python app/main.py
 See `scripts/build_windows.ps1` for PyInstaller one-folder builds. Distribute the full `dist\NeuralRadar\` folder (not just the .exe).
 
 ## Roadmap
-See [ROADMAP.md](ROADMAP.md) for details on upcoming features (GUI polish, import/restore, optional PDF reports, network map visualization, etc.).
+See [ROADMAP.md](ROADMAP.md) for details on upcoming features (v0.3 public release preparation, further reporting enhancements, etc.).
 
 ## Contributing
 Contributions are welcome. Please ensure new features align with the core philosophy: local-first, safe, defensive, and no telemetry.

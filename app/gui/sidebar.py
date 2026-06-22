@@ -17,35 +17,34 @@ class Sidebar(QWidget):
         self.setStyleSheet(Theme.get_sidebar_style())
         
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 32, 16, 24)
-        layout.setSpacing(8)
+        layout.setContentsMargins(16, 28, 16, 20)
+        layout.setSpacing(4)
         
         # === BRANDING HEADER ===
-        # Logo / Title
         logo_container = QFrame()
         logo_container.setObjectName("LogoContainer")
+        logo_container.setStyleSheet("border: none; background: transparent;")
         logo_layout = QVBoxLayout(logo_container)
-        logo_layout.setContentsMargins(8, 0, 8, 16)
-        logo_layout.setSpacing(4)
+        logo_layout.setContentsMargins(8, 0, 8, 8)
+        logo_layout.setSpacing(2)
         
         logo_label = QLabel("NEURALRADAR")
         logo_label.setObjectName("Logo")
-        logo_label.setFont(QFont("Segoe UI", 22, QFont.Weight.Bold))
+        logo_label.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
         logo_layout.addWidget(logo_label)
         
-        # Subtitle: NeuralShield
-        subtitle = QLabel("NeuralShield")
+        subtitle = QLabel("NEURALSHIELD")
         subtitle.setObjectName("Subtitle")
-        subtitle.setFont(QFont("Segoe UI", 10, QFont.Weight.Medium))
+        subtitle.setFont(QFont("Segoe UI", 9, QFont.Weight.Medium))
         logo_layout.addWidget(subtitle)
         
         layout.addWidget(logo_container)
         
         # Version badge
         version_frame = QFrame()
-        version_frame.setStyleSheet("background: transparent;")
+        version_frame.setStyleSheet("background: transparent; border: none;")
         version_layout = QHBoxLayout(version_frame)
-        version_layout.setContentsMargins(12, 0, 12, 20)
+        version_layout.setContentsMargins(12, 0, 12, 8)
         
         version_badge = QLabel(f"{VERSION}")
         version_badge.setObjectName("VersionBadge")
@@ -53,6 +52,17 @@ class Sidebar(QWidget):
         version_layout.addStretch()
         
         layout.addWidget(version_frame)
+        
+        # Divider
+        divider = QFrame()
+        divider.setObjectName("SidebarDivider")
+        divider.setFixedHeight(1)
+        layout.addWidget(divider)
+        
+        # Section label
+        modules_label = QLabel("MODULES")
+        modules_label.setObjectName("SectionLabel")
+        layout.addWidget(modules_label)
         
         # Navigation
         self.btn_dashboard = self.create_nav_button("Dashboard", checked=True)
@@ -72,11 +82,16 @@ class Sidebar(QWidget):
         
         layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
         
+        # System section
+        sys_label = QLabel("SYSTEM")
+        sys_label.setObjectName("SectionLabel")
+        layout.addWidget(sys_label)
+        
         layout.addWidget(self.btn_settings)
         
-        # Footer tagline (subtle)
-        tagline = QLabel("Local-first • Secure • Transparent")
-        tagline.setStyleSheet(f"color: {Theme.COLORS.TEXT_MUTED}; font-size: 10px; padding-top: 20px; text-align: center;")
+        # Footer tagline
+        tagline = QLabel("Local-first · Secure · Transparent")
+        tagline.setStyleSheet(f"color: {Theme.COLORS.MUTED}; font-size: 10px; padding-top: 16px; border: none; background: transparent;")
         tagline.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(tagline)
         
@@ -86,6 +101,5 @@ class Sidebar(QWidget):
         btn.setObjectName("navButton")
         btn.setCheckable(True)
         btn.setChecked(checked)
-        # Ensure property for potential dynamic styling
         btn.setProperty("nav", True)
         return btn

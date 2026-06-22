@@ -25,11 +25,14 @@ class DeviceVaultExporter:
         return SessionLocal()
 
     @staticmethod
-    def export_devices_csv(output_path: str) -> bool:
+    def export_devices_csv(output_path: str, device_ids: list = None) -> bool:
         """Export devices to CSV."""
         try:
             db = DeviceVaultExporter._get_session()
-            devices = db.query(Device).all()
+            if device_ids:
+                devices = db.query(Device).filter(Device.id.in_(device_ids)).all()
+            else:
+                devices = db.query(Device).all()
             db.close()
 
             if not devices:
@@ -72,11 +75,14 @@ class DeviceVaultExporter:
             return False
 
     @staticmethod
-    def export_devices_json(output_path: str) -> bool:
+    def export_devices_json(output_path: str, device_ids: list = None) -> bool:
         """Export devices to JSON with metadata."""
         try:
             db = DeviceVaultExporter._get_session()
-            devices = db.query(Device).all()
+            if device_ids:
+                devices = db.query(Device).filter(Device.id.in_(device_ids)).all()
+            else:
+                devices = db.query(Device).all()
             db.close()
 
             if not devices:
@@ -220,11 +226,14 @@ class DeviceVaultExporter:
             return False
 
     @staticmethod
-    def export_full_inventory_json(output_path: str) -> bool:
+    def export_full_inventory_json(output_path: str, device_ids: list = None) -> bool:
         """Export full inventory (devices, services, web metadata) as JSON with metadata."""
         try:
             db = DeviceVaultExporter._get_session()
-            devices = db.query(Device).all()
+            if device_ids:
+                devices = db.query(Device).filter(Device.id.in_(device_ids)).all()
+            else:
+                devices = db.query(Device).all()
             services = db.query(OpenPort).all()
             web_services = db.query(WebService).all()
             db.close()
@@ -316,16 +325,16 @@ class DeviceVaultExporter:
 
 
 # Convenience functions for GUI
-def export_devices_csv(output_path: str) -> bool:
-    return DeviceVaultExporter.export_devices_csv(output_path)
+def export_devices_csv(output_path: str, device_ids: list = None) -> bool:
+    return DeviceVaultExporter.export_devices_csv(output_path, device_ids)
 
 
-def export_devices_json(output_path: str) -> bool:
-    return DeviceVaultExporter.export_devices_json(output_path)
+def export_devices_json(output_path: str, device_ids: list = None) -> bool:
+    return DeviceVaultExporter.export_devices_json(output_path, device_ids)
 
 
-def export_full_inventory_json(output_path: str) -> bool:
-    return DeviceVaultExporter.export_full_inventory_json(output_path)
+def export_full_inventory_json(output_path: str, device_ids: list = None) -> bool:
+    return DeviceVaultExporter.export_full_inventory_json(output_path, device_ids)
 
 
 def export_services_csv(output_path: str) -> bool:

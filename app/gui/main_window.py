@@ -6,6 +6,7 @@ from app.gui.iphawk_page import IPHawkPage
 from app.gui.devicevault_page import DeviceVaultPage
 from app.gui.portscope_page import PortScopePage
 from app.gui.webpulse_page import WebPulsePage
+from app.gui.netmap_page import NetMapPage
 from app.gui.theme import Theme
 from app.core.logger import logger
 from app.core.version import VERSION
@@ -67,7 +68,7 @@ class MainWindow(QMainWindow):
         self.webpulse_page = WebPulsePage()
         self.content_area.addWidget(self.webpulse_page)
         
-        self.netmap_page = PlaceholderPage("NetMap")
+        self.netmap_page = NetMapPage()
         self.content_area.addWidget(self.netmap_page)
         
         self.settings_page = SettingsPage()

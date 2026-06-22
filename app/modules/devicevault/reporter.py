@@ -24,7 +24,7 @@ class DeviceVaultReporter:
         return SessionLocal()
 
     @staticmethod
-    def _generate_header() -> str:
+    def _generate_header(scope_label: str = "Full Inventory") -> str:
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         return f"""# NeuralRadar Local Inventory Report
 
@@ -32,7 +32,7 @@ class DeviceVaultReporter:
 **Created by 0xRootNull**  
 **Version:** {VERSION}  
 **Generated:** {now}  
-**Report Type:** Local Inventory Report
+**Report Type:** Local Inventory Report — {scope_label}
 
 > This report is generated from locally stored DeviceVault data. No data was sent externally.
 
@@ -137,7 +137,7 @@ class DeviceVaultReporter:
 """
 
     @staticmethod
-    def generate_markdown_report(output_path: str) -> bool:
+    def generate_markdown_report(output_path: str, device_ids: list = None, scope_label: str = "Full Inventory") -> bool:
         """Generate a clean Markdown inventory report."""
         try:
             db = DeviceVaultReporter._get_session()
@@ -167,7 +167,7 @@ class DeviceVaultReporter:
             return False
 
     @staticmethod
-    def generate_html_report(output_path: str) -> bool:
+    def generate_html_report(output_path: str, device_ids: list = None, scope_label: str = "Full Inventory") -> bool:
         """Generate a self-contained HTML report with dark cyber-tech styling."""
         try:
             db = DeviceVaultReporter._get_session()
@@ -308,9 +308,9 @@ class DeviceVaultReporter:
 
 
 # Convenience functions for GUI
-def generate_markdown_report(output_path: str) -> bool:
+def generate_markdown_report(output_path: str, device_ids: list = None, scope_label: str = "Full Inventory") -> bool:
     return DeviceVaultReporter.generate_markdown_report(output_path)
 
 
-def generate_html_report(output_path: str) -> bool:
+def generate_html_report(output_path: str, device_ids: list = None, scope_label: str = "Full Inventory") -> bool:
     return DeviceVaultReporter.generate_html_report(output_path)
